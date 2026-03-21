@@ -1,0 +1,6 @@
+@Prokat_HostAddress = http://localhost:5026
+
+GET {{Prokat_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
