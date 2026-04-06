@@ -1,11 +1,37 @@
-using Microsoft.EntityFrameworkCore;
-using Prokat.API.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Prokat.API.Data;
+using Prokat.API.Services;
 using System.Text;
 
+var builder = WebApplication.CreateBuilder(args);
+
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
+var key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? "");
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IOrderPricingService, OrderPricingService>();
+builder.Services.AddScoped<IInventoryAvailabilityService, InventoryAvailabilityService>();
+builder.Services.AddScoped<IRentalBookingService, RentalBookingService>();
+builder.Services.AddScoped<IClientReportService, ClientReportService>();
+
+builder.Services.AddControllers().AddApplicationPart(typeof(Program).Assembly);
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.SetIsOriginAllowed(_ => true)
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 builder.Services.AddAuthentication(options =>
 {
@@ -28,24 +54,31 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-builder.Services.AddControllers();
-builder.Services.AddControllers().AddApplicationPart(typeof(Program).Assembly);
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
 var app = builder.Build();
+
+try
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
+catch (Exception ex) when (app.Environment.IsDevelopment())
+{
+    Console.WriteLine($"Миграция БД: {ex.Message}");
+}
 
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseCors();
+
 app.MapControllers();
+app.MapFallbackToFile("index.html");
 
 app.Run();

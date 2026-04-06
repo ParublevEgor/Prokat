@@ -12,5 +12,7 @@ namespace Prokat.API.Models
         public string? Маска { get; set; }
         public string? Одежда { get; set; }
         public int? ID_Техника_консультанта { get; set; }
+
+        public ICollection<RentalBooking> Rentals { get; set; } = new List<RentalBooking>();
     }
 }

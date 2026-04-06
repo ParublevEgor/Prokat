@@ -22,7 +22,7 @@ namespace Prokat.API.Controllers
         public IActionResult Login(string username, string password)
         {
             // Простой пользователь
-            if (username == "admin" && password == "123")
+            if (username == "admin" && password == "12345")
             {
                 var token = GenerateToken(username);
                 return Ok(new { token });

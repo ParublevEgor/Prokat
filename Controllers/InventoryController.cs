@@ -1,8 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Prokat.API.Data;
-using Prokat.API.DTO;
-using System.Threading.Tasks;
+using Prokat.API.Services;
 
 namespace Prokat.API.Controllers
 {
@@ -10,21 +7,21 @@ namespace Prokat.API.Controllers
     [ApiController]
     public class InventoryController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IInventoryAvailabilityService _inventory;
 
-        public InventoryController(ApplicationDbContext context)
+        public InventoryController(IInventoryAvailabilityService inventory)
         {
-            _context = context;
+            _inventory = inventory;
         }
 
-        // Вызов хранимой процедуры
         [HttpGet("free")]
-        public async Task<IActionResult> GetFreeInventory(string? type)
+        public async Task<IActionResult> GetFreeInventory(
+            [FromQuery] string? type,
+            [FromQuery] DateTime start,
+            [FromQuery] DateTime end,
+            CancellationToken ct)
         {
-            var result = await _context.Set<InventoryDto>()
-                .FromSqlRaw("EXEC sp_НайтиСвободныйИнвентарь @ТипИнвентаря = {0}", type ?? "")
-                .ToListAsync();
-
+            var result = await _inventory.GetFreeAsync(type, start, end, ct);
             return Ok(result);
         }
     }
