@@ -16,6 +16,8 @@ namespace Prokat.API.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<RentalBooking> RentalBookings { get; set; }
         public DbSet<PriceTariff> PriceTariffs { get; set; }
+        public DbSet<AppUser> AppUsers { get; set; }
+        public DbSet<SiteSettings> SiteSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -58,6 +60,43 @@ namespace Prokat.API.Data
                 .WithMany(i => i.Rentals)
                 .HasForeignKey(r => r.ID_Инвентаря)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<AppUser>()
+                .ToTable("Учетная_запись")
+                .HasKey(u => u.ID_Учетной_записи);
+
+            modelBuilder.Entity<AppUser>()
+                .Property(u => u.Логин)
+                .HasMaxLength(64)
+                .IsRequired();
+
+            modelBuilder.Entity<AppUser>()
+                .Property(u => u.ПарольХеш)
+                .HasMaxLength(256)
+                .IsRequired();
+
+            modelBuilder.Entity<AppUser>()
+                .Property(u => u.Роль)
+                .HasMaxLength(16)
+                .IsRequired();
+
+            modelBuilder.Entity<AppUser>()
+                .HasIndex(u => u.Логин)
+                .IsUnique();
+
+            modelBuilder.Entity<AppUser>()
+                .HasOne(u => u.Client)
+                .WithMany()
+                .HasForeignKey(u => u.ID_Клиента)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<SiteSettings>()
+                .ToTable("Настройки_проката")
+                .HasKey(s => s.ID);
+
+            modelBuilder.Entity<SiteSettings>()
+                .Property(s => s.СтавкаНДС)
+                .HasPrecision(5, 4);
 
             modelBuilder.Entity<Order>()
                 .Property(o => o.Сумма_оплаты)

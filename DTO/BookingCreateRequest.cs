@@ -4,11 +4,10 @@ namespace Prokat.API.DTO
 {
     public class BookingCreateRequest
     {
-        [Required]
-        public string LastName { get; set; } = "Иванов";
+        /// <summary>Для администратора без привязки к клиенту — ФИО нового клиента.</summary>
+        public string? LastName { get; set; }
 
-        [Required]
-        public string FirstName { get; set; } = "Иван";
+        public string? FirstName { get; set; }
 
         public int? Age { get; set; }
         public int? Height { get; set; }
@@ -19,14 +18,14 @@ namespace Prokat.API.DTO
         [Required]
         public string EquipmentType { get; set; } = "Лыжи";
 
+        /// <summary>Календарный день аренды (дата без привязки к часовому поясу — используется дата).</summary>
         [Required]
-        public DateTime StartDate { get; set; }
+        public DateTime RentalDate { get; set; }
 
+        /// <summary>1, 2, 4, day — длительность от начала смены (9:00).</summary>
         [Required]
-        public DateTime EndDate { get; set; }
+        public string DurationKey { get; set; } = "2";
 
         public int? InventoryId { get; set; }
-
-        public decimal VatRate { get; set; } = 0.18m;
     }
 }

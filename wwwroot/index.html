@@ -4,9 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Прокат зимнего инвентаря</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="css/app.css" />
 </head>
 <body>
@@ -15,43 +13,136 @@
             <span class="logo" aria-hidden="true">&#10052;</span>
             <div>
                 <h1>Прокат зимнего инвентаря</h1>
-                <p class="tagline">Бронирование онлайн — без очереди в прокате</p>
+                <p class="tagline">Бронирование онлайн</p>
             </div>
         </div>
-        <nav class="nav">
-            <a href="/swagger" target="_blank" rel="noopener">Swagger API</a>
-        </nav>
+        <div class="session" id="session-bar">
+            <span id="session-info"></span>
+            <a class="btn-swagger" href="/swagger" target="_blank" rel="noopener noreferrer">Swagger</a>
+        </div>
     </header>
 
     <main class="layout">
-        <section class="card" id="booking">
+        <section class="card" id="auth-section">
+            <div class="auth-grid">
+                <div>
+                    <h2>Вход</h2>
+                    <form id="login-form" class="grid">
+                        <label>Логин<input name="login" required autocomplete="username" /></label>
+                        <label>Пароль<input name="password" type="password" required autocomplete="current-password" /></label>
+                        <div class="actions span-2">
+                            <button type="submit">Войти</button>
+                        </div>
+                    </form>
+                    <p id="login-msg" class="msg" role="status"></p>
+                </div>
+                <div>
+                    <h2>Регистрация</h2>
+                    <form id="register-form" class="grid">
+                        <label>Логин<input name="login" required minlength="3" autocomplete="username" /></label>
+                        <label>Пароль<input name="password" type="password" required minlength="4" autocomplete="new-password" /></label>
+                        <label>Фамилия<input name="фамилия" required /></label>
+                        <label>Имя<input name="имя" required /></label>
+                        <label>Возраст<input name="возраст" type="number" min="5" max="99" value="25" /></label>
+                        <div class="actions span-2">
+                            <button type="submit" class="secondary">Создать аккаунт</button>
+                        </div>
+                    </form>
+                    <p id="register-msg" class="msg" role="status"></p>
+                </div>
+            </div>
+        </section>
+
+        <section class="card hidden" id="user-panel">
             <h2>Новое бронирование</h2>
-            <form id="booking-form" class="grid">
-                <label>Фамилия<input name="фамилия" required value="Иванов" /></label>
-                <label>Имя<input name="имя" required value="Иван" /></label>
-                <label>Возраст<input name="возраст" type="number" min="5" max="99" value="25" /></label>
+            <p class="hint" id="vat-hint-user"></p>
+            <form id="booking-form-user" class="grid">
+                <label>День аренды<input name="rentalDate" type="date" required /></label>
+                <label>Длительность
+                    <select name="durationKey">
+                        <option value="1">1 час</option>
+                        <option value="2" selected>2 часа</option>
+                        <option value="4">4 часа</option>
+                        <option value="day">Весь день (9:00–21:00)</option>
+                    </select>
+                </label>
                 <label>Тип<select name="тип">
                     <option value="Лыжи">Лыжи</option>
                     <option value="Сноуборд">Сноуборд</option>
                 </select></label>
-                <label>Начало<input name="начало" type="datetime-local" required /></label>
-                <label>Окончание<input name="конец" type="datetime-local" required /></label>
-                <label>НДС (0–1)<input name="ндс" type="number" step="0.01" value="0.18" /></label>
                 <div class="actions span-2">
-                    <button type="button" id="btn-free">Показать свободный инвентарь</button>
+                    <button type="button" id="btn-free-user" class="secondary">Свободный инвентарь</button>
                     <button type="submit">Забронировать</button>
                 </div>
             </form>
-            <p id="booking-msg" class="msg" role="status"></p>
+            <p id="booking-msg-user" class="msg" role="status"></p>
+            <h2 style="margin-top:1rem">Свободно на интервал</h2>
+            <div id="free-list-user" class="table-wrap empty">Выберите день и длительность, затем нажмите «Свободный инвентарь».</div>
+
+            <h2 style="margin-top:1rem">Мои аренды</h2>
+            <p class="hint">История привязана к вашему профилю клиента (данные из JWT при каждом запросе).</p>
+            <div class="actions" style="margin-bottom:0.5rem">
+                <button type="button" id="btn-history" class="secondary">Обновить список</button>
+            </div>
+            <div id="history-table" class="table-wrap empty">Нажмите «Обновить список».</div>
         </section>
 
-        <section class="card" id="free">
-            <h2>Свободно на интервал</h2>
-            <div id="free-list" class="table-wrap empty">Выберите даты и нажмите «Показать свободный инвентарь».</div>
-        </section>
+        <section class="card hidden" id="admin-panel">
+            <h2>Сводка</h2>
+            <div id="admin-stats" class="hint">Нажмите «Обновить сводку».</div>
+            <div class="actions" style="margin-bottom:0.75rem">
+                <button type="button" id="btn-admin-stats" class="secondary">Обновить сводку</button>
+            </div>
 
-        <section class="card" id="report">
-            <h2>Отчёт по клиентам за период</h2>
+            <h2>Ставка НДС</h2>
+            <p class="hint">Итоговая сумма для клиентов пересчитывается с этой ставкой (например 0.18 = 18%).</p>
+            <form id="vat-form" class="row">
+                <label>НДС (0–1)<input name="vat" type="number" step="0.01" min="0" max="1" /></label>
+                <button type="submit">Сохранить</button>
+            </form>
+            <p id="vat-msg" class="msg" role="status"></p>
+
+            <h2 style="margin-top:1rem">Бронирование от имени клиента</h2>
+            <p class="hint" id="vat-hint-admin"></p>
+            <form id="booking-form-admin" class="grid">
+                <label>Фамилия<input name="фамилия" required /></label>
+                <label>Имя<input name="имя" required /></label>
+                <label>Возраст<input name="возраст" type="number" min="5" max="99" /></label>
+                <label>День аренды<input name="rentalDate" type="date" required /></label>
+                <label>Длительность
+                    <select name="durationKey">
+                        <option value="1">1 час</option>
+                        <option value="2" selected>2 часа</option>
+                        <option value="4">4 часа</option>
+                        <option value="day">Весь день (9:00–21:00)</option>
+                    </select>
+                </label>
+                <label>Тип<select name="тип">
+                    <option value="Лыжи">Лыжи</option>
+                    <option value="Сноуборд">Сноуборд</option>
+                </select></label>
+                <div class="actions span-2">
+                    <button type="button" id="btn-free-admin" class="secondary">Свободный инвентарь</button>
+                    <button type="submit">Забронировать</button>
+                </div>
+            </form>
+            <p id="booking-msg-admin" class="msg" role="status"></p>
+            <div id="free-list-admin" class="table-wrap empty"></div>
+
+            <h2 style="margin-top:1rem">Учётные записи</h2>
+            <p class="hint">Удаление снимает только вход в систему; заказы в БД сохраняются.</p>
+            <div class="actions" style="margin-bottom:0.5rem">
+                <button type="button" id="btn-admin-users" class="secondary">Загрузить пользователей</button>
+            </div>
+            <div id="admin-users-table" class="table-wrap empty"></div>
+
+            <h2 style="margin-top:1rem">Все аренды</h2>
+            <div class="actions" style="margin-bottom:0.5rem">
+                <button type="button" id="btn-admin-rentals" class="secondary">Загрузить список</button>
+            </div>
+            <div id="admin-rentals-table" class="table-wrap empty"></div>
+
+            <h2 style="margin-top:1rem">Отчёт по клиентам</h2>
             <div class="row">
                 <label>С даты<input id="rep-from" type="date" /></label>
                 <label>По дату<input id="rep-to" type="date" /></label>
@@ -59,11 +150,9 @@
             </div>
             <div id="report-table" class="table-wrap empty">Укажите период или оставьте пустым для всех.</div>
         </section>
-    </main>
 
-    <footer class="foot">
-        <span>Курсовой проект · MS SQL Server + ASP.NET Core</span>
-    </footer>
+        <p class="hint" style="text-align:center"><button type="button" id="btn-logout" class="secondary hidden">Выйти</button></p>
+    </main>
 
     <script src="js/app.js" defer></script>
 </body>

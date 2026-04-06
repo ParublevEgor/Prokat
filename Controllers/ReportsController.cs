@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Prokat.API.Services;
 
@@ -5,6 +6,7 @@ namespace Prokat.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class ReportsController : ControllerBase
     {
         private readonly IClientReportService _reports;
