@@ -19,9 +19,11 @@ namespace Prokat.API.Controllers
             [FromQuery] string? type,
             [FromQuery] DateTime start,
             [FromQuery] DateTime end,
+            [FromQuery] int? shoeSize,
+            [FromQuery] int? height,
             CancellationToken ct)
         {
-            var result = await _inventory.GetFreeAsync(type, start, end, ct);
+            var result = await _inventory.GetRecommendedFreeAsync(type, start, end, shoeSize, height, ct);
             return Ok(result);
         }
     }

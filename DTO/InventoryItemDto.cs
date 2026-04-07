@@ -8,5 +8,8 @@ namespace Prokat.API.DTO
         public string? Poles { get; set; }
         public string? Snowboard { get; set; }
         public string? Boots { get; set; }
+        public string? Helmet { get; set; }
+        public string? Goggles { get; set; }
+        public bool Recommended { get; set; }
     }
 }

@@ -22,6 +22,10 @@ namespace Prokat.API.DTO
 
         [Range(5, 99)]
         public int? Age { get; set; }
+
+        public int? Height { get; set; }
+        public int? Weight { get; set; }
+        public int? ShoeSize { get; set; }
     }
 
     public class LoginRequest

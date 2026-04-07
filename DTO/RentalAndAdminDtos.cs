@@ -40,13 +40,28 @@ namespace Prokat.API.DTO
         public int ActiveRentals { get; set; }
     }
 
+    public class AdminInventoryStatusDto
+    {
+        public int InventoryId { get; set; }
+        public string Status { get; set; } = "";
+        public string Type { get; set; } = "";
+        public string? Skis { get; set; }
+        public string? Snowboard { get; set; }
+        public string? Boots { get; set; }
+        public string? Poles { get; set; }
+    }
+
     public class MeResponseDto
     {
         public int UserId { get; set; }
         public string Login { get; set; } = "";
         public string Role { get; set; } = "";
         public int? ClientId { get; set; }
+        public int? Height { get; set; }
+        public int? Weight { get; set; }
+        public int? ShoeSize { get; set; }
         public string Auth { get; set; } = "Bearer";
         public string TokenType { get; set; } = "JWT";
+        public string? ProfilePhotoBase64 { get; set; }
     }
 }

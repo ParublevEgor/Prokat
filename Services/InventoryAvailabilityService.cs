@@ -7,6 +7,7 @@ namespace Prokat.API.Services
     public interface IInventoryAvailabilityService
     {
         Task<IReadOnlyList<InventoryItemDto>> GetFreeAsync(string? типИнвентаря, DateTime начало, DateTime конец, CancellationToken ct = default);
+        Task<IReadOnlyList<InventoryItemDto>> GetRecommendedFreeAsync(string? типИнвентаря, DateTime начало, DateTime конец, int? shoeSize, int? height, CancellationToken ct = default);
     }
 
     public class InventoryAvailabilityService : IInventoryAvailabilityService
@@ -19,6 +20,9 @@ namespace Prokat.API.Services
         }
 
         public async Task<IReadOnlyList<InventoryItemDto>> GetFreeAsync(string? типИнвентаря, DateTime начало, DateTime конец, CancellationToken ct = default)
+            => await GetRecommendedFreeAsync(типИнвентаря, начало, конец, null, null, ct);
+
+        public async Task<IReadOnlyList<InventoryItemDto>> GetRecommendedFreeAsync(string? типИнвентаря, DateTime начало, DateTime конец, int? shoeSize, int? height, CancellationToken ct = default)
         {
             if (конец <= начало)
                 return Array.Empty<InventoryItemDto>();
@@ -47,10 +51,23 @@ namespace Prokat.API.Services
                     Poles = i.Палки,
                     Snowboard = i.Сноуборд,
                     Boots = i.Ботинки,
+                    Helmet = i.Шлем,
+                    Goggles = i.Маска,
+                    Recommended = IsRecommended(i.Ботинки, i.Лыжи, i.Сноуборд, shoeSize, height),
                 })
                 .ToListAsync(ct);
 
             return list;
+        }
+
+        private static bool IsRecommended(string? boots, string? skis, string? snowboard, int? shoeSize, int? height)
+        {
+            var byShoe = shoeSize is null || string.IsNullOrEmpty(boots) || boots.Contains(shoeSize.Value.ToString(), StringComparison.OrdinalIgnoreCase);
+            var byHeight = height is null
+                || (height < 165 && ((skis ?? "").Contains("S") || (snowboard ?? "").Contains("S")))
+                || (height >= 165 && height < 180 && ((skis ?? "").Contains("M") || (snowboard ?? "").Contains("M")))
+                || (height >= 180 && ((skis ?? "").Contains("L") || (snowboard ?? "").Contains("L")));
+            return byShoe && byHeight;
         }
     }
 }

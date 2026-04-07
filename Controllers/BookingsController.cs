@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Prokat.API.DTO;
 using Prokat.API.Services;
 using System.Security.Claims;
@@ -32,6 +33,15 @@ namespace Prokat.API.Controllers
             catch (InvalidOperationException ex)
             {
                 return BadRequest(new { message = ex.Message });
+            }
+            catch (DbUpdateException ex)
+            {
+                var message = ex.InnerException?.Message ?? ex.Message;
+                return BadRequest(new { message = $"Ошибка сохранения брони: {message}" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Внутренняя ошибка бронирования: {ex.Message}" });
             }
         }
     }

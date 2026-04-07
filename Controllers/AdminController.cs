@@ -117,6 +117,33 @@ namespace Prokat.API.Controllers
             return Ok(new { rentalId = id, status = r.Статус });
         }
 
+        [HttpGet("inventory/status")]
+        public async Task<IActionResult> InventoryStatus(CancellationToken ct)
+        {
+            var now = DateTime.UtcNow;
+            var rows = await _db.Inventory.AsNoTracking()
+                .Select(i => new AdminInventoryStatusDto
+                {
+                    InventoryId = i.ID_Инвентаря,
+                    Type = !string.IsNullOrEmpty(i.Лыжи) ? "Лыжи" : (!string.IsNullOrEmpty(i.Сноуборд) ? "Сноуборд" : "Не определен"),
+                    Skis = i.Лыжи,
+                    Snowboard = i.Сноуборд,
+                    Boots = i.Ботинки,
+                    Poles = i.Палки,
+                    Status = _db.RentalBookings.Any(r =>
+                        r.ID_Инвентаря == i.ID_Инвентаря &&
+                        r.Статус != "Отмена" &&
+                        r.ДатаНачала <= now &&
+                        now < r.ДатаОкончания)
+                        ? "В аренде"
+                        : "В наличии",
+                })
+                .OrderBy(x => x.InventoryId)
+                .ToListAsync(ct);
+
+            return Ok(rows);
+        }
+
         private static string? BuildInventorySummary(Inventory i)
         {
             var parts = new[] { i.Лыжи, i.Сноуборд, i.Ботинки, i.Палки }

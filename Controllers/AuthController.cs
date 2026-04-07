@@ -36,6 +36,9 @@ namespace Prokat.API.Controllers
                 Фамилия = req.LastName,
                 Имя = req.FirstName,
                 Возраст = req.Age,
+                Рост = req.Height,
+                Вес = req.Weight,
+                РазмерОбуви = req.ShoeSize,
             };
             _db.Clients.Add(client);
             await _db.SaveChangesAsync(ct);
@@ -59,16 +62,21 @@ namespace Prokat.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest req, CancellationToken ct)
         {
-            var login = req.Login?.Trim() ?? "";
-            var user = await _db.AppUsers.FirstOrDefaultAsync(u => u.Логин == login, ct);
-            if (user is null || !BCrypt.Net.BCrypt.Verify(req.Password, user.ПарольХеш))
-                return Unauthorized(new { message = "Неверный логин или пароль." });
-
-            var token = _jwt.CreateAccessToken(user.ID_Учетной_записи, user.Логин, user.Роль);
-            return Ok(new AuthResponse { Token = token, Role = user.Роль, Login = user.Логин });
+            return await LoginInternal(req, null, ct);
         }
 
-        /// <summary>Данные из действительного JWT (после проверки подписи middleware).</summary>
+        [HttpPost("login/user")]
+        public async Task<IActionResult> LoginUser([FromBody] LoginRequest req, CancellationToken ct)
+        {
+            return await LoginInternal(req, "User", ct);
+        }
+
+        [HttpPost("login/admin")]
+        public async Task<IActionResult> LoginAdmin([FromBody] LoginRequest req, CancellationToken ct)
+        {
+            return await LoginInternal(req, "Admin", ct);
+        }
+
         [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> Me(CancellationToken ct)
@@ -85,13 +93,37 @@ namespace Prokat.API.Controllers
             if (u is null)
                 return Unauthorized();
 
+            var profile = u.ID_Клиента is int cid
+                ? await _db.Clients.AsNoTracking()
+                    .Where(c => c.ID_Клиента == cid)
+                    .Select(c => new { c.Рост, c.Вес, c.РазмерОбуви })
+                    .FirstOrDefaultAsync(ct)
+                : null;
+
             return Ok(new MeResponseDto
             {
                 UserId = userId,
                 Login = u.Логин,
                 Role = u.Роль,
                 ClientId = u.ID_Клиента,
+                Height = profile?.Рост,
+                Weight = profile?.Вес,
+                ShoeSize = profile?.РазмерОбуви,
             });
+        }
+
+        private async Task<IActionResult> LoginInternal(LoginRequest req, string? requiredRole, CancellationToken ct)
+        {
+            var login = req.Login?.Trim() ?? "";
+            var user = await _db.AppUsers.FirstOrDefaultAsync(u => u.Логин == login, ct);
+            if (user is null || !BCrypt.Net.BCrypt.Verify(req.Password, user.ПарольХеш))
+                return Unauthorized(new { message = "Неверный логин или пароль." });
+
+            if (!string.IsNullOrEmpty(requiredRole) && !string.Equals(user.Роль, requiredRole, StringComparison.OrdinalIgnoreCase))
+                return Unauthorized(new { message = $"Этот вход доступен только для роли {requiredRole}." });
+
+            var token = _jwt.CreateAccessToken(user.ID_Учетной_записи, user.Логин, user.Роль);
+            return Ok(new AuthResponse { Token = token, Role = user.Роль, Login = user.Логин });
         }
     }
 }
