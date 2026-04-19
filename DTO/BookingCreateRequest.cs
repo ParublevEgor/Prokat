@@ -26,6 +26,9 @@ namespace Prokat.API.DTO
         [Required]
         public string DurationKey { get; set; } = "2";
 
+        /// <summary>Добавить ски-пасс к текущему заказу.</summary>
+        public bool IncludeSkiPass { get; set; }
+
         public int? InventoryId { get; set; }
     }
 }

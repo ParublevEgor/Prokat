@@ -44,5 +44,44 @@ namespace Prokat.API.Controllers
                 return StatusCode(500, new { message = $"Внутренняя ошибка бронирования: {ex.Message}" });
             }
         }
+
+        [HttpPost("quote")]
+        public async Task<IActionResult> Quote([FromBody] BookingQuoteRequest request, CancellationToken ct)
+        {
+            try
+            {
+                var result = await _bookings.QuoteAsync(request, ct);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("skipass")]
+        public async Task<IActionResult> BuySkipPass([FromBody] SkipPassPurchaseRequest request, CancellationToken ct)
+        {
+            var idStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int? userId = int.TryParse(idStr, out var uid) ? uid : null;
+            try
+            {
+                var result = await _bookings.CreateSkipPassPurchaseAsync(request, userId, ct);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (DbUpdateException ex)
+            {
+                var message = ex.InnerException?.Message ?? ex.Message;
+                return BadRequest(new { message = $"Ошибка сохранения покупки ски-пасса: {message}" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Внутренняя ошибка покупки ски-пасса: {ex.Message}" });
+            }
+        }
     }
 }

@@ -35,11 +35,18 @@ namespace Prokat.API.Services
                 .Distinct()
                 .ToListAsync(ct);
 
-            var query = _db.Inventory.AsQueryable();
+            var query = _db.Inventory
+                .Include(i => i.Лыжи)
+                .Include(i => i.Сноуборд)
+                .Include(i => i.Ботинки)
+                .Include(i => i.Палки)
+                .Include(i => i.Шлем)
+                .Include(i => i.Очки)
+                .AsQueryable();
             if (string.Equals(тип, "Лыжи", StringComparison.OrdinalIgnoreCase))
-                query = query.Where(i => i.Лыжи != null && i.Лыжи != "");
+                query = query.Where(i => i.ID_Лыжи != null);
             else if (string.Equals(тип, "Сноуборд", StringComparison.OrdinalIgnoreCase))
-                query = query.Where(i => i.Сноуборд != null && i.Сноуборд != "");
+                query = query.Where(i => i.ID_Сноуборд != null);
 
             var list = await query
                 .Where(i => !busyIds.Contains(i.ID_Инвентаря))
@@ -47,26 +54,31 @@ namespace Prokat.API.Services
                 .Select(i => new InventoryItemDto
                 {
                     Id = i.ID_Инвентаря,
-                    Skis = i.Лыжи,
-                    Poles = i.Палки,
-                    Snowboard = i.Сноуборд,
-                    Boots = i.Ботинки,
-                    Helmet = i.Шлем,
-                    Goggles = i.Маска,
-                    Recommended = IsRecommended(i.Ботинки, i.Лыжи, i.Сноуборд, shoeSize, height),
+                    Skis = i.Лыжи == null ? null : $"{i.Лыжи.Название} ({i.Лыжи.Тип}, {i.Лыжи.РостовкаСм} см)",
+                    Poles = i.Палки == null ? null : $"{i.Палки.Название} ({i.Палки.ДлинаСм} см)",
+                    Snowboard = i.Сноуборд == null ? null : $"{i.Сноуборд.Название} ({i.Сноуборд.Тип}, {i.Сноуборд.РостовкаСм} см)",
+                    Boots = i.Ботинки == null ? null : $"{i.Ботинки.Название}, EU {i.Ботинки.РазмерEU}",
+                    Helmet = i.Шлем == null ? null : $"{i.Шлем.Название} ({i.Шлем.Размер})",
+                    Goggles = i.Очки == null ? null : $"{i.Очки.Название} ({i.Очки.Размер})",
+                    Recommended = IsRecommended(i, shoeSize, height),
                 })
                 .ToListAsync(ct);
+
+            foreach (var item in list)
+                InventoryItemPresentation.Enrich(item, тип);
 
             return list;
         }
 
-        private static bool IsRecommended(string? boots, string? skis, string? snowboard, int? shoeSize, int? height)
+        private static bool IsRecommended(Models.Inventory i, int? shoeSize, int? height)
         {
-            var byShoe = shoeSize is null || string.IsNullOrEmpty(boots) || boots.Contains(shoeSize.Value.ToString(), StringComparison.OrdinalIgnoreCase);
+            var byShoe = shoeSize is null || i.Ботинки == null || i.Ботинки.РазмерEU == shoeSize.Value;
+            var len = i.Лыжи?.РостовкаСм ?? i.Сноуборд?.РостовкаСм;
             var byHeight = height is null
-                || (height < 165 && ((skis ?? "").Contains("S") || (snowboard ?? "").Contains("S")))
-                || (height >= 165 && height < 180 && ((skis ?? "").Contains("M") || (snowboard ?? "").Contains("M")))
-                || (height >= 180 && ((skis ?? "").Contains("L") || (snowboard ?? "").Contains("L")));
+                || (len is null)
+                || (height < 165 && len <= 160)
+                || (height >= 165 && height < 180 && len > 160 && len <= 175)
+                || (height >= 180 && len > 175);
             return byShoe && byHeight;
         }
     }

@@ -37,6 +37,18 @@ namespace Prokat.API.DTO
         public string Password { get; set; } = "";
     }
 
+    public class UpdateProfileRequest
+    {
+        public string? LastName { get; set; }
+        public string? FirstName { get; set; }
+        public int? Age { get; set; }
+        public int? Height { get; set; }
+        public int? Weight { get; set; }
+        public int? ShoeSize { get; set; }
+        public string? ProfilePhotoBase64 { get; set; }
+        public bool RemoveProfilePhoto { get; set; }
+    }
+
     public class AuthResponse
     {
         public string Token { get; set; } = "";

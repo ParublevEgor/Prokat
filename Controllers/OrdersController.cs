@@ -25,14 +25,31 @@ namespace Prokat.API.Controllers
             return Ok(list);
         }
 
+        [HttpGet("tariffs/public")]
+        public async Task<IActionResult> GetPublicTariffs(CancellationToken ct)
+        {
+            var rows = await _context.PriceTariffs.AsNoTracking()
+                .OrderBy(t => t.Время_аренды)
+                .Select(t => new
+                {
+                    DurationHours = t.Время_аренды,
+                    DurationText = t.Время_аренды >= 12 ? "Весь день" : $"{t.Время_аренды} ч",
+                    WeekdayPrice = t.Прокат_будни,
+                    WeekendPrice = t.Прокат_выходные_и_праздничные_дни
+                })
+                .ToListAsync(ct);
+
+            return Ok(rows);
+        }
+
         /// <summary>Пересчёт стоимости в коде (идемпотентно по тарифу и датам аренды).</summary>
         [HttpPost("calculate/{orderId}")]
         public async Task<IActionResult> CalculateOrder(int orderId, [FromQuery] decimal vat = 0.18m, CancellationToken ct = default)
         {
             try
             {
-                var (базовая, сНдс) = await _pricing.ApplyPricingAsync(orderId, vat, ct);
-                return Ok(new { orderId, baseAmount = базовая, totalWithVat = сНдс });
+                var (базовая, прокат, скипасс, сНдс) = await _pricing.ApplyPricingAsync(orderId, vat, includeSkiPass: false, ct: ct);
+                return Ok(new { orderId, baseAmount = базовая, rentalAmount = прокат, skiPassAmount = скипасс, totalWithVat = сНдс });
             }
             catch (InvalidOperationException ex)
             {

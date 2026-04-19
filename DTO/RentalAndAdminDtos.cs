@@ -17,19 +17,36 @@ namespace Prokat.API.DTO
         public string Login { get; set; } = "";
         public string Role { get; set; } = "";
         public int? ClientId { get; set; }
+        public bool CanDelete { get; set; }
+        public string? DeleteBlockedReason { get; set; }
     }
 
+    /// <summary>Список аренд для админки: без дублирования с заказом — номер аренды; сумма после описания инвентаря.</summary>
     public class AdminRentalDto
     {
         public int RentalId { get; set; }
-        public int OrderId { get; set; }
-        public int InventoryId { get; set; }
         public string? ClientName { get; set; }
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
         public string Status { get; set; } = "";
-        public decimal? TotalWithVat { get; set; }
         public string? InventorySummary { get; set; }
+        public decimal? Total { get; set; }
+    }
+
+    public class AdminUserDetailDto
+    {
+        public int UserId { get; set; }
+        public string Login { get; set; } = "";
+        public string Role { get; set; } = "";
+        public int? ClientId { get; set; }
+        public string? LastName { get; set; }
+        public string? FirstName { get; set; }
+        public int? Age { get; set; }
+        public int? Height { get; set; }
+        public int? Weight { get; set; }
+        public int? ShoeSize { get; set; }
+        public bool HasProfilePhoto { get; set; }
+        public int? Deposit { get; set; }
     }
 
     public class AdminStatsDto
@@ -57,6 +74,9 @@ namespace Prokat.API.DTO
         public string Login { get; set; } = "";
         public string Role { get; set; } = "";
         public int? ClientId { get; set; }
+        public string? LastName { get; set; }
+        public string? FirstName { get; set; }
+        public int? Age { get; set; }
         public int? Height { get; set; }
         public int? Weight { get; set; }
         public int? ShoeSize { get; set; }

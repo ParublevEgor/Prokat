@@ -13,6 +13,12 @@ namespace Prokat.API.Data
 
         public DbSet<Client> Clients { get; set; }
         public DbSet<Inventory> Inventory { get; set; }
+        public DbSet<SkiItem> Skis { get; set; }
+        public DbSet<SnowboardItem> Snowboards { get; set; }
+        public DbSet<BootsItem> Boots { get; set; }
+        public DbSet<PolesItem> Poles { get; set; }
+        public DbSet<HelmetItem> Helmets { get; set; }
+        public DbSet<GogglesItem> Goggles { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<RentalBooking> RentalBookings { get; set; }
         public DbSet<PriceTariff> PriceTariffs { get; set; }
@@ -33,6 +39,66 @@ namespace Prokat.API.Data
                 .ToTable("Инвентарь")
                 .HasKey(i => i.ID_Инвентаря);
 
+            modelBuilder.Entity<SkiItem>()
+                .ToTable("Лыжи")
+                .HasKey(i => i.ID_Лыжи);
+
+            modelBuilder.Entity<SnowboardItem>()
+                .ToTable("Сноуборды")
+                .HasKey(i => i.ID_Сноуборд);
+
+            modelBuilder.Entity<BootsItem>()
+                .ToTable("Ботинки")
+                .HasKey(i => i.ID_Ботинки);
+
+            modelBuilder.Entity<PolesItem>()
+                .ToTable("Палки")
+                .HasKey(i => i.ID_Палки);
+
+            modelBuilder.Entity<HelmetItem>()
+                .ToTable("Шлемы")
+                .HasKey(i => i.ID_Шлем);
+
+            modelBuilder.Entity<GogglesItem>()
+                .ToTable("Очки")
+                .HasKey(i => i.ID_Очки);
+
+            modelBuilder.Entity<Inventory>()
+                .HasOne(i => i.Лыжи)
+                .WithMany()
+                .HasForeignKey(i => i.ID_Лыжи)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Inventory>()
+                .HasOne(i => i.Сноуборд)
+                .WithMany()
+                .HasForeignKey(i => i.ID_Сноуборд)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Inventory>()
+                .HasOne(i => i.Ботинки)
+                .WithMany()
+                .HasForeignKey(i => i.ID_Ботинки)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Inventory>()
+                .HasOne(i => i.Палки)
+                .WithMany()
+                .HasForeignKey(i => i.ID_Палки)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Inventory>()
+                .HasOne(i => i.Шлем)
+                .WithMany()
+                .HasForeignKey(i => i.ID_Шлем)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Inventory>()
+                .HasOne(i => i.Очки)
+                .WithMany()
+                .HasForeignKey(i => i.ID_Очки)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<PriceTariff>()
                 .ToTable("Цены_на_услуги")
                 .HasKey(p => p.Время_аренды);
@@ -42,7 +108,8 @@ namespace Prokat.API.Data
                 .ValueGeneratedNever();
 
             modelBuilder.Entity<RentalBooking>()
-                .ToTable("Аренда_бронирование")
+                // Для SQL Server с триггерами: отключаем быстрый OUTPUT без INTO
+                .ToTable("Аренда_бронирование", t => t.HasTrigger("TRG_Аренда_Проверки"))
                 .HasKey(r => r.ID_Аренды);
 
             modelBuilder.Entity<RentalBooking>()

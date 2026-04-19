@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Прокат зимнего инвентаря</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+    <header class="top">
+        <div class="brand">
+            <span class="logo" aria-hidden="true">&#10052;</span>
+            <div><h1>Прокат зимнего инвентаря</h1></div>
+        </div>
+        <div class="session" id="session-bar">
+            <span id="session-info"></span>
+            <a class="btn-swagger" href="/swagger" target="_blank" rel="noopener noreferrer">Swagger</a>
+        </div>
+    </header>
+
+    <main class="layout">
+
+        <!-- ===== АВТОРИЗАЦИЯ ===== -->
+        <section class="card" id="auth-section">
+            <h2>Войти</h2>
+            <!-- Поля ввода отдельно от кнопок действий -->
+            <div class="grid">
+                <label>Логин<input id="inp-login" type="text" autocomplete="username" /></label>
+                <label>Пароль<input id="inp-password" type="password" autocomplete="current-password" /></label>
+            </div>
+            <p id="login-msg" class="msg" role="status"></p>
+            <div class="actions" style="margin-top:0.75rem">
+                <button id="btn-login-user">Войти</button>
+                <button id="btn-login-admin" class="secondary">Войти как Администратор</button>
+                <button id="btn-show-register" class="secondary">Зарегистрироваться</button>
+            </div>
+
+            <div id="register-wrap" class="hidden" style="margin-top:1.25rem; border-top:1px solid var(--border); padding-top:1rem">
+                <h2>Регистрация нового пользователя</h2>
+                <form id="register-form" class="grid">
+                    <label>Логин<input name="login" required minlength="3" autocomplete="username" /></label>
+                    <label>Пароль<input name="password" type="password" required minlength="4" autocomplete="new-password" /></label>
+                    <label>Фамилия<input name="фамилия" required /></label>
+                    <label>Имя<input name="имя" required /></label>
+                    <label>Возраст<input name="возраст" type="number" min="5" max="99" value="25" /></label>
+                    <label>Рост (см)<input name="рост" type="number" min="120" max="220" value="175" /></label>
+                    <label>Вес (кг)<input name="вес" type="number" min="35" max="160" value="70" /></label>
+                    <label>Размер обуви<input name="размерОбуви" type="number" min="34" max="48" value="41" /></label>
+                    <div class="actions span-2">
+                        <button type="submit">Создать аккаунт</button>
+                        <button type="button" id="btn-hide-register" class="secondary">Отмена</button>
+                    </div>
+                </form>
+                <p id="register-msg" class="msg" role="status"></p>
+            </div>
+        </section>
+
+        <!-- ===== ПАНЕЛЬ ПОЛЬЗОВАТЕЛЯ ===== -->
+        <section class="card hidden" id="user-panel">
+            <h2>Новое бронирование</h2>
+            <div class="profile-head">
+                <img id="user-avatar" class="avatar avatar-lg" alt="Аватар" />
+                <div class="actions">
+                    <button type="button" id="btn-edit-profile" class="secondary">Редактировать профиль</button>
+                </div>
+            </div>
+            <form id="profile-form" class="grid hidden" style="margin-bottom:0.75rem">
+                <label>Фамилия<input name="lastName" /></label>
+                <label>Имя<input name="firstName" /></label>
+                <label>Возраст<input name="age" type="number" min="5" max="99" /></label>
+                <label>Рост (см)<input name="height" type="number" min="120" max="220" /></label>
+                <label>Вес (кг)<input name="weight" type="number" min="35" max="160" /></label>
+                <label>Размер обуви<input name="shoeSize" type="number" min="34" max="48" /></label>
+                <label class="span-2">Аватар (jpg/png)
+                    <input name="avatarFile" type="file" accept="image/png,image/jpeg,image/webp" />
+                </label>
+                <div class="actions span-2">
+                    <button type="submit">Сохранить профиль</button>
+                    <button type="button" id="btn-remove-avatar" class="secondary">Удалить аватар</button>
+                    <button type="button" id="btn-cancel-profile" class="secondary">Отмена</button>
+                </div>
+            </form>
+            <p id="profile-msg" class="msg" role="status"></p>
+            <p class="hint" id="vat-hint-user"></p>
+            <form id="booking-form-user" class="grid">
+                <label>День аренды<input name="rentalDate" type="date" required /></label>
+                <label>Длительность
+                    <select name="durationKey">
+                        <option value="1">1 час</option>
+                        <option value="2" selected>2 часа</option>
+                        <option value="4">4 часа</option>
+                        <option value="day">Весь день (9:00–21:00)</option>
+                    </select>
+                </label>
+                <label>Тип
+                    <select name="тип" id="sel-type">
+                        <option value="Лыжи">Лыжи</option>
+                        <option value="Сноуборд">Сноуборд</option>
+                    </select>
+                </label>
+                <!-- Фильтры по экипировке — заполняются после нажатия «Найти свободный» -->
+                <label>Ботинки<select name="ботинки"></select></label>
+                <label id="label-poles">Палки<select name="палки"></select></label>
+                <label>Шлем<select name="шлем"></select></label>
+                <label>Очки<select name="очки"></select></label>
+                <div class="actions span-2">
+                    <button type="button" id="btn-free-user" class="secondary">Найти свободный инвентарь</button>
+                    <button type="submit">Забронировать</button>
+                </div>
+            </form>
+            <p id="booking-msg-user" class="msg" role="status"></p>
+            <div id="free-list-user" class="table-wrap empty">Нажмите «Найти свободный инвентарь».</div>
+
+            <h2 style="margin-top:1rem">Мои аренды</h2>
+            <div class="actions" style="margin-bottom:0.5rem">
+                <button type="button" id="btn-history" class="secondary">Обновить список</button>
+            </div>
+            <div id="history-table" class="table-wrap empty"></div>
+
+            <h2 style="margin-top:1rem">Тарифы проката</h2>
+            <div class="actions" style="margin-bottom:0.5rem">
+                <button type="button" id="btn-load-tariffs" class="secondary">Показать / скрыть прайс</button>
+            </div>
+            <div id="tariffs-table" class="table-wrap hidden"></div>
+        </section>
+
+        <!-- ===== ПАНЕЛЬ АДМИНИСТРАТОРА ===== -->
+        <section class="card hidden" id="admin-panel">
+            <h2>Ставка НДС</h2>
+            <form id="vat-form" class="row">
+                <label>Ставка НДС
+                    <select name="vat">
+                        <option value="0.18">18%</option>
+                        <option value="0.20">20%</option>
+                    </select>
+                </label>
+                <button type="submit">Сохранить</button>
+            </form>
+            <p id="vat-msg" class="msg" role="status"></p>
+
+            <h2 style="margin-top:1rem">Учётные записи</h2>
+            <div class="actions" style="margin-bottom:0.5rem">
+                <button type="button" id="btn-admin-users" class="secondary">Загрузить пользователей</button>
+            </div>
+            <div id="admin-users-table" class="table-wrap empty"></div>
+
+            <h2 style="margin-top:1rem">Все аренды</h2>
+            <div class="actions" style="margin-bottom:0.5rem">
+                <button type="button" id="btn-admin-rentals" class="secondary">Загрузить список</button>
+            </div>
+            <div id="admin-rentals-table" class="table-wrap empty"></div>
+
+            <h2 style="margin-top:1rem">Инвентарь: наличие и аренда</h2>
+            <div class="actions" style="margin-bottom:0.5rem">
+                <button type="button" id="btn-admin-inventory" class="secondary">Загрузить статус инвентаря</button>
+            </div>
+            <div id="admin-inventory-table" class="table-wrap empty"></div>
+        </section>
+
+        <div style="text-align:center;margin-top:0.5rem">
+            <button type="button" id="btn-logout" class="secondary hidden">Выйти</button>
+        </div>
+    </main>
+
+    <script src="/js/app.js" defer></script>
+</body>
+</html>

@@ -9,6 +9,7 @@ namespace Prokat.API.Models
         public int? Рост { get; set; }
         public int? Вес { get; set; }
         public int? РазмерОбуви { get; set; }
+        public string? ФотоПрофиля { get; set; }
         public int? Залог { get; set; }
         public int? ID_Заказа { get; set; }
     }

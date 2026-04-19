@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Prokat.API.Models;
+using System;
 using System.Data;
+using System.Globalization;
 
 namespace Prokat.API.Data
 {
@@ -54,48 +56,139 @@ namespace Prokat.API.Data
 
         private static void SeedInventory(ApplicationDbContext db)
         {
-            // Добавляем тестовый набор только если ещё нет записей с заполненным шлемом
-            var hasFullData = db.Inventory.AsNoTracking()
-                .Any(i => i.Шлем != null && i.Шлем != "");
-            if (hasFullData) return;
+            SeedCatalogs(db);
 
-            var rows = new[]
+            if (db.Inventory.AsNoTracking().Any(i => i.ID_Лыжи != null || i.ID_Сноуборд != null))
+                return;
+
+            var skis = db.Skis.AsNoTracking().OrderBy(x => x.РостовкаСм).ToList();
+            var boards = db.Snowboards.AsNoTracking().OrderBy(x => x.РостовкаСм).ToList();
+            var boots = db.Boots.AsNoTracking().OrderBy(x => x.РазмерEU).ToList();
+            var poles = db.Poles.AsNoTracking().OrderBy(x => x.ДлинаСм).ToList();
+            var helmets = db.Helmets.AsNoTracking().OrderBy(x => x.Размер).ToList();
+            var goggles = db.Goggles.AsNoTracking().OrderBy(x => x.Размер).ToList();
+
+            var rows = new List<Inventory>();
+            foreach (var ski in skis)
             {
-                // Лыжи — маленький размер (рост ~150–165)
-                new Inventory{ Лыжи="Лыжи S 150см", Палки="Палки S 105см", Ботинки="Ботинки 38", Шлем="Шлем S", Маска="Маска S" },
-                new Inventory{ Лыжи="Лыжи S 155см", Палки="Палки S 105см", Ботинки="Ботинки 37", Шлем="Шлем S", Маска="Маска S" },
-                new Inventory{ Лыжи="Лыжи S 155см", Палки="Палки S 110см", Ботинки="Ботинки 39", Шлем="Шлем S", Маска="Маска S" },
+                var pair = PickByLength(boots, ski.РостовкаСм);
+                rows.Add(new Inventory
+                {
+                    ID_Лыжи = ski.ID_Лыжи,
+                    ID_Палки = PickPolesForLength(poles, ski.РостовкаСм)?.ID_Палки,
+                    ID_Ботинки = pair?.ID_Ботинки,
+                    ID_Шлем = PickBySize(helmets, SizeClassForLength(ski.РостовкаСм))?.ID_Шлем,
+                    ID_Очки = PickBySize(goggles, SizeClassForLength(ski.РостовкаСм))?.ID_Очки,
+                });
+            }
 
-                // Лыжи — средний размер (рост ~165–180)
-                new Inventory{ Лыжи="Лыжи M 165см", Палки="Палки M 115см", Ботинки="Ботинки 40", Шлем="Шлем M", Маска="Маска M" },
-                new Inventory{ Лыжи="Лыжи M 170см", Палки="Палки M 115см", Ботинки="Ботинки 41", Шлем="Шлем M", Маска="Маска M" },
-                new Inventory{ Лыжи="Лыжи M 170см", Палки="Палки M 120см", Ботинки="Ботинки 42", Шлем="Шлем M", Маска="Маска M" },
-                new Inventory{ Лыжи="Лыжи M 175см", Палки="Палки M 120см", Ботинки="Ботинки 41", Шлем="Шлем M", Маска="Маска M" },
-
-                // Лыжи — большой размер (рост 180+)
-                new Inventory{ Лыжи="Лыжи L 180см", Палки="Палки L 125см", Ботинки="Ботинки 43", Шлем="Шлем L", Маска="Маска L" },
-                new Inventory{ Лыжи="Лыжи L 185см", Палки="Палки L 130см", Ботинки="Ботинки 44", Шлем="Шлем L", Маска="Маска L" },
-                new Inventory{ Лыжи="Лыжи L 185см", Палки="Палки L 130см", Ботинки="Ботинки 45", Шлем="Шлем L", Маска="Маска L" },
-
-                // Сноуборд — маленький
-                new Inventory{ Сноуборд="Сноуборд S 140см", Ботинки="Ботинки 37", Шлем="Шлем S", Маска="Маска S" },
-                new Inventory{ Сноуборд="Сноуборд S 145см", Ботинки="Ботинки 38", Шлем="Шлем S", Маска="Маска S" },
-                new Inventory{ Сноуборд="Сноуборд S 148см", Ботинки="Ботинки 39", Шлем="Шлем S", Маска="Маска S" },
-
-                // Сноуборд — средний
-                new Inventory{ Сноуборд="Сноуборд M 152см", Ботинки="Ботинки 40", Шлем="Шлем M", Маска="Маска M" },
-                new Inventory{ Сноуборд="Сноуборд M 155см", Ботинки="Ботинки 41", Шлем="Шлем M", Маска="Маска M" },
-                new Inventory{ Сноуборд="Сноуборд M 158см", Ботинки="Ботинки 42", Шлем="Шлем M", Маска="Маска M" },
-                new Inventory{ Сноуборд="Сноуборд M 160см", Ботинки="Ботинки 41", Шлем="Шлем M", Маска="Маска M" },
-
-                // Сноуборд — большой
-                new Inventory{ Сноуборд="Сноуборд L 162см", Ботинки="Ботинки 43", Шлем="Шлем L", Маска="Маска L" },
-                new Inventory{ Сноуборд="Сноуборд L 165см", Ботинки="Ботинки 44", Шлем="Шлем L", Маска="Маска L" },
-                new Inventory{ Сноуборд="Сноуборд L 168см", Ботинки="Ботинки 45", Шлем="Шлем L", Маска="Маска L" },
-            };
+            foreach (var board in boards)
+            {
+                var pair = PickByLength(boots, board.РостовкаСм);
+                rows.Add(new Inventory
+                {
+                    ID_Сноуборд = board.ID_Сноуборд,
+                    ID_Ботинки = pair?.ID_Ботинки,
+                    ID_Шлем = PickBySize(helmets, SizeClassForLength(board.РостовкаСм))?.ID_Шлем,
+                    ID_Очки = PickBySize(goggles, SizeClassForLength(board.РостовкаСм))?.ID_Очки,
+                });
+            }
 
             db.Inventory.AddRange(rows);
             db.SaveChanges();
+        }
+
+        private static void SeedCatalogs(ApplicationDbContext db)
+        {
+            if (!db.Skis.AsNoTracking().Any())
+            {
+                db.Skis.AddRange(
+                    new SkiItem { Название = "Atomic Bent", Тип = "Горные", РостовкаСм = 172, Уровень = "Продвинутый" },
+                    new SkiItem { Название = "Rossignol XP", Тип = "Классические", РостовкаСм = 170, Уровень = "Базовый" },
+                    new SkiItem { Название = "Head Shape", Тип = "Горные", РостовкаСм = 180, Уровень = "Средний" }
+                );
+                db.SaveChanges();
+            }
+
+            if (!db.Snowboards.AsNoTracking().Any())
+            {
+                db.Snowboards.AddRange(
+                    new SnowboardItem { Название = "Jones Flagship", Тип = "Фрирайд", РостовкаСм = 158, Жесткость = "Средняя" },
+                    new SnowboardItem { Название = "Burton Custom", Тип = "Универсальный", РостовкаСм = 162, Жесткость = "Средняя" },
+                    new SnowboardItem { Название = "Lib Tech Dynamo", Тип = "Олл-маунтин", РостовкаСм = 156, Жесткость = "Мягкая" }
+                );
+                db.SaveChanges();
+            }
+
+            if (!db.Boots.AsNoTracking().Any())
+            {
+                db.Boots.AddRange(
+                    new BootsItem { Название = "Atomic Hawx", Тип = "Лыжные", РазмерEU = 38 },
+                    new BootsItem { Название = "Atomic Hawx", Тип = "Лыжные", РазмерEU = 41 },
+                    new BootsItem { Название = "Salomon Dialogue", Тип = "Сноубордические", РазмерEU = 44 }
+                );
+                db.SaveChanges();
+            }
+
+            if (!db.Poles.AsNoTracking().Any())
+            {
+                db.Poles.AddRange(
+                    new PolesItem { Название = "Leki Airfoil", Тип = "Горнолыжные", ДлинаСм = 110 },
+                    new PolesItem { Название = "Scott Team", Тип = "Горнолыжные", ДлинаСм = 120 },
+                    new PolesItem { Название = "Head Multi", Тип = "Горнолыжные", ДлинаСм = 130 }
+                );
+                db.SaveChanges();
+            }
+
+            if (!db.Helmets.AsNoTracking().Any())
+            {
+                db.Helmets.AddRange(
+                    new HelmetItem { Название = "Giro Ledge", Размер = "S", Тип = "Универсальный" },
+                    new HelmetItem { Название = "Smith Mission", Размер = "M", Тип = "Универсальный" },
+                    new HelmetItem { Название = "Head Radar", Размер = "L", Тип = "Универсальный" }
+                );
+                db.SaveChanges();
+            }
+
+            if (!db.Goggles.AsNoTracking().Any())
+            {
+                db.Goggles.AddRange(
+                    new GogglesItem { Название = "Anon Helix", Размер = "S", ТипЛинзы = "S2" },
+                    new GogglesItem { Название = "Smith Squad", Размер = "M", ТипЛинзы = "S2" },
+                    new GogglesItem { Название = "Oakley Line Miner", Размер = "L", ТипЛинзы = "S3" }
+                );
+                db.SaveChanges();
+            }
+        }
+
+        private static string SizeClassForLength(int lengthCm)
+        {
+            if (lengthCm < 160) return "S";
+            if (lengthCm <= 175) return "M";
+            return "L";
+        }
+
+        private static BootsItem? PickByLength(List<BootsItem> boots, int lengthCm)
+        {
+            return lengthCm switch
+            {
+                < 160 => boots.OrderBy(x => Math.Abs(x.РазмерEU - 38)).FirstOrDefault(),
+                <= 175 => boots.OrderBy(x => Math.Abs(x.РазмерEU - 41)).FirstOrDefault(),
+                _ => boots.OrderBy(x => Math.Abs(x.РазмерEU - 44)).FirstOrDefault()
+            };
+        }
+
+        private static PolesItem? PickPolesForLength(List<PolesItem> poles, int lengthCm)
+        {
+            var poleLen = (int)Math.Round(lengthCm * 0.7, MidpointRounding.AwayFromZero);
+            return poles.OrderBy(p => Math.Abs(p.ДлинаСм - poleLen)).FirstOrDefault();
+        }
+
+        private static T? PickBySize<T>(IEnumerable<T> items, string size) where T : class
+        {
+            var prop = typeof(T).GetProperty("Размер");
+            return items.FirstOrDefault(x =>
+                string.Equals(Convert.ToString(prop?.GetValue(x), CultureInfo.InvariantCulture), size, StringComparison.OrdinalIgnoreCase));
         }
     }
 }

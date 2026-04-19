@@ -2,22 +2,22 @@ SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO
 
-IF OBJECT_ID(N'dbo.[Аренда_бронирование]', N'U') IS NULL
-OR OBJECT_ID(N'dbo.[Инвентарь]', N'U') IS NULL
-OR OBJECT_ID(N'dbo.[Клиент]', N'U') IS NULL
-OR OBJECT_ID(N'dbo.[Счет_оплаты]', N'U') IS NULL
-BEGIN
-    PRINT N'Не найдены нужные таблицы. Сначала примените скрипты создания схемы.';
-    RETURN;
-END;
+--IF OBJECT_ID(N'dbo.[Аренда_бронирование]', N'U') IS NULL
+--OR OBJECT_ID(N'dbo.[Инвентарь]', N'U') IS NULL
+--OR OBJECT_ID(N'dbo.[Клиент]', N'U') IS NULL
+--OR OBJECT_ID(N'dbo.[Счет_оплаты]', N'U') IS NULL
+--BEGIN
+--    PRINT N'Не найдены нужные таблицы. Сначала примените скрипты создания схемы.';
+--    RETURN;
+--END;
 
-IF OBJECT_ID(N'dbo.TRG_Аренда_Проверки', N'TR') IS NOT NULL
-    DROP TRIGGER dbo.TRG_Аренда_Проверки;
-IF OBJECT_ID(N'dbo.TRG_Инвентарь_ЗапретУдаления', N'TR') IS NOT NULL
-    DROP TRIGGER dbo.TRG_Инвентарь_ЗапретУдаления;
-IF OBJECT_ID(N'dbo.TRG_Клиент_ЗапретУдаления', N'TR') IS NOT NULL
-    DROP TRIGGER dbo.TRG_Клиент_ЗапретУдаления;
-GO
+--IF OBJECT_ID(N'dbo.TRG_Аренда_Проверки', N'TR') IS NOT NULL
+--    DROP TRIGGER dbo.TRG_Аренда_Проверки;
+--IF OBJECT_ID(N'dbo.TRG_Инвентарь_ЗапретУдаления', N'TR') IS NOT NULL
+--    DROP TRIGGER dbo.TRG_Инвентарь_ЗапретУдаления;
+--IF OBJECT_ID(N'dbo.TRG_Клиент_ЗапретУдаления', N'TR') IS NOT NULL
+--    DROP TRIGGER dbo.TRG_Клиент_ЗапретУдаления;
+--GO
 
 --1 Проверка дат аренды
 CREATE TRIGGER dbo.TRG_Аренда_Проверки

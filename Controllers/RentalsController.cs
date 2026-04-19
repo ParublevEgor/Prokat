@@ -39,7 +39,14 @@ namespace Prokat.API.Controllers
             var rows = await (
                 from r in _db.RentalBookings.AsNoTracking()
                 join o in _db.Orders on r.ID_Заказа equals o.ID_Заказа
-                join i in _db.Inventory on r.ID_Инвентаря equals i.ID_Инвентаря
+                join i in _db.Inventory
+                    .Include(x => x.Лыжи)
+                    .Include(x => x.Сноуборд)
+                    .Include(x => x.Ботинки)
+                    .Include(x => x.Палки)
+                    .Include(x => x.Шлем)
+                    .Include(x => x.Очки)
+                    on r.ID_Инвентаря equals i.ID_Инвентаря
                 where o.ID_Клиента == clientId
                 orderby r.ДатаНачала descending
                 select new RentalHistoryItemDto
@@ -58,7 +65,13 @@ namespace Prokat.API.Controllers
 
         private static string? BuildInventorySummary(Inventory i)
         {
-            var parts = new[] { i.Лыжи, i.Сноуборд, i.Ботинки, i.Палки }
+            var parts = new[]
+            {
+                i.Лыжи == null ? null : $"{i.Лыжи.Название} {i.Лыжи.РостовкаСм} см",
+                i.Сноуборд == null ? null : $"{i.Сноуборд.Название} {i.Сноуборд.РостовкаСм} см",
+                i.Ботинки == null ? null : $"Ботинки EU {i.Ботинки.РазмерEU}",
+                i.Палки == null ? null : $"Палки {i.Палки.ДлинаСм} см"
+            }
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .Take(2);
             var s = string.Join(", ", parts);

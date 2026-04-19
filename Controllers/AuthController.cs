@@ -96,7 +96,7 @@ namespace Prokat.API.Controllers
             var profile = u.ID_Клиента is int cid
                 ? await _db.Clients.AsNoTracking()
                     .Where(c => c.ID_Клиента == cid)
-                    .Select(c => new { c.Рост, c.Вес, c.РазмерОбуви })
+                    .Select(c => new { c.Фамилия, c.Имя, c.Возраст, c.Рост, c.Вес, c.РазмерОбуви, c.ФотоПрофиля })
                     .FirstOrDefaultAsync(ct)
                 : null;
 
@@ -106,10 +106,45 @@ namespace Prokat.API.Controllers
                 Login = u.Логин,
                 Role = u.Роль,
                 ClientId = u.ID_Клиента,
+                LastName = profile?.Фамилия,
+                FirstName = profile?.Имя,
+                Age = profile?.Возраст,
                 Height = profile?.Рост,
                 Weight = profile?.Вес,
                 ShoeSize = profile?.РазмерОбуви,
+                ProfilePhotoBase64 = profile?.ФотоПрофиля,
             });
+        }
+
+        [Authorize(Roles = "User")]
+        [HttpPut("me")]
+        public async Task<IActionResult> UpdateMe([FromBody] UpdateProfileRequest req, CancellationToken ct)
+        {
+            var idStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(idStr, out var userId))
+                return Unauthorized();
+
+            var acc = await _db.AppUsers.FirstOrDefaultAsync(x => x.ID_Учетной_записи == userId, ct);
+            if (acc is null || acc.ID_Клиента is null)
+                return BadRequest(new { message = "Профиль клиента не найден." });
+
+            var client = await _db.Clients.FirstOrDefaultAsync(c => c.ID_Клиента == acc.ID_Клиента.Value, ct);
+            if (client is null)
+                return BadRequest(new { message = "Профиль клиента не найден." });
+
+            if (req.LastName is not null) client.Фамилия = req.LastName.Trim();
+            if (req.FirstName is not null) client.Имя = req.FirstName.Trim();
+            if (req.Age.HasValue) client.Возраст = req.Age;
+            if (req.Height.HasValue) client.Рост = req.Height;
+            if (req.Weight.HasValue) client.Вес = req.Weight;
+            if (req.ShoeSize.HasValue) client.РазмерОбуви = req.ShoeSize;
+            if (req.RemoveProfilePhoto)
+                client.ФотоПрофиля = null;
+            else if (!string.IsNullOrWhiteSpace(req.ProfilePhotoBase64))
+                client.ФотоПрофиля = req.ProfilePhotoBase64;
+
+            await _db.SaveChangesAsync(ct);
+            return Ok(new { message = "Профиль обновлён." });
         }
 
         private async Task<IActionResult> LoginInternal(LoginRequest req, string? requiredRole, CancellationToken ct)
