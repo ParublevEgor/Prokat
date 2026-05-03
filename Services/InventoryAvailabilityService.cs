@@ -43,9 +43,11 @@ namespace Prokat.API.Services
                 .Include(i => i.Шлем)
                 .Include(i => i.Очки)
                 .AsQueryable();
-            if (string.Equals(тип, "Лыжи", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(тип, "Skis", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(тип, "Лыжи", StringComparison.OrdinalIgnoreCase))
                 query = query.Where(i => i.ID_Лыжи != null);
-            else if (string.Equals(тип, "Сноуборд", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(тип, "Snowboard", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(тип, "Сноуборд", StringComparison.OrdinalIgnoreCase))
                 query = query.Where(i => i.ID_Сноуборд != null);
 
             var list = await query

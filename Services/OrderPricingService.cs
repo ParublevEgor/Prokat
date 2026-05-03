@@ -100,12 +100,8 @@ namespace Prokat.API.Services
 
             if (includeSkiPass)
             {
-                var passRaw = isWeekend
-                    ? tariff.Скипасс_выходные_и_праздиничные_дни
-                    : tariff.Скипасс_будни;
-                if (passRaw is null or <= 0)
-                    throw new InvalidOperationException("Для выбранного тарифа не задана цена ски-пасса");
-                skipassPrice = passRaw.Value;
+                var slot = SkipPassStandalonePricing.TimeSlotFromBillableHours(billableHours);
+                skipassPrice = SkipPassStandalonePricing.GetPrice(isWeekend, "time", slot, null);
             }
 
             var baseTotal = rentalPrice + skipassPrice;

@@ -9,17 +9,20 @@ namespace Prokat.API.Services
         public static void Enrich(InventoryItemDto item, string? equipmentType)
         {
             var kind = (equipmentType ?? "").Trim();
-            var main = kind.Equals("Сноуборд", StringComparison.OrdinalIgnoreCase)
-                ? item.Snowboard
-                : item.Skis;
+            var isSnowboard = IsSnowboardKind(kind);
+            var main = isSnowboard ? item.Snowboard : item.Skis;
 
             item.SizeClass = InferSizeClass(main);
             item.LengthCmHint = TryParseCm(main);
             item.BootSizeEuHint = ParseBootEu(item.Boots);
-            item.CardTitle = BuildCardTitle(kind, item.LengthCmHint, item.SizeClass);
+            item.CardTitle = BuildCardTitle(isSnowboard, item.LengthCmHint, item.SizeClass);
             item.CardSubtitle = BuildCardSubtitle(item.BootSizeEuHint, item.Helmet, item.Goggles);
-            item.ModelReference = BuildModelReference(kind, item);
+            item.ModelReference = BuildModelReference(isSnowboard, item);
         }
+
+        private static bool IsSnowboardKind(string kind) =>
+            kind.Equals("Snowboard", StringComparison.OrdinalIgnoreCase)
+            || kind.Equals("Сноуборд", StringComparison.OrdinalIgnoreCase);
 
         private static string? InferSizeClass(string? text)
         {
@@ -55,9 +58,9 @@ namespace Prokat.API.Services
             return m.Success && int.TryParse(m.Groups[1].Value, out var eu) && eu is >= 33 and <= 52 ? eu : null;
         }
 
-        private static string BuildCardTitle(string kind, int? lengthCm, string? sizeClass)
+        private static string BuildCardTitle(bool isSnowboard, int? lengthCm, string? sizeClass)
         {
-            var typeRu = kind.Equals("Сноуборд", StringComparison.OrdinalIgnoreCase) ? "Сноуборд" : "Лыжи";
+            var typeRu = isSnowboard ? "Сноуборд" : "Лыжи";
             var parts = new List<string> { typeRu };
             if (lengthCm is int len)
                 parts.Add($"длина ~{len} см");
@@ -90,9 +93,9 @@ namespace Prokat.API.Services
         }
 
         /// <summary>Техническое имя для раскрытия «Подробнее».</summary>
-        private static string? BuildModelReference(string kind, InventoryItemDto item)
+        private static string? BuildModelReference(bool isSnowboard, InventoryItemDto item)
         {
-            var main = kind.Equals("Сноуборд", StringComparison.OrdinalIgnoreCase) ? item.Snowboard : item.Skis;
+            var main = isSnowboard ? item.Snowboard : item.Skis;
             return string.IsNullOrWhiteSpace(main) ? null : main.Trim();
         }
     }

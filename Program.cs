@@ -6,9 +6,8 @@ using Prokat.API.Data;
 using Prokat.API.Services;
 using System.Reflection;
 using System.Text;
+using System.Text.Json.Serialization;
 
-// При запуске ContentRoot часто указывает на bin\...\net8.0; wwwroot может не копироваться туда.
-// Ищем папку wwwroot с index.html вверх от каталога приложения и от текущей директории.
 static string? FindWwwRootDirectory()
 {
     static string? TryFrom(string? startPath)
@@ -54,7 +53,12 @@ builder.Services.AddScoped<IClientReportService, ClientReportService>();
 builder.Services.AddScoped<ISiteSettingsService, SiteSettingsService>();
 builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
-builder.Services.AddControllers().AddApplicationPart(typeof(Program).Assembly);
+builder.Services.AddControllers()
+    .AddApplicationPart(typeof(Program).Assembly)
+    .AddJsonOptions(o =>
+    {
+        o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>

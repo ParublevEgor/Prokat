@@ -20,8 +20,14 @@ namespace Prokat.API.DTO
 
     public class SkipPassPurchaseRequest
     {
-        public DateTime RentalDate { get; set; }
-        public string DurationKey { get; set; } = "2";
+        /// <summary>weekday | weekend — без выбора календарной даты.</summary>
+        public string DayKind { get; set; } = "weekday";
+        /// <summary>time | lifts</summary>
+        public string Mode { get; set; } = "time";
+        /// <summary>Для mode=time: 2, 3, 4, day</summary>
+        public string? TimeSlot { get; set; }
+        /// <summary>Для mode=lifts: 15, 30, 50, 100</summary>
+        public int? LiftCount { get; set; }
         public string? LastName { get; set; }
         public string? FirstName { get; set; }
         public int? Age { get; set; }

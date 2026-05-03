@@ -1,14 +1,18 @@
 namespace Prokat.API.DTO
 {
-    public class RentalHistoryItemDto
+    /// <summary>Строка «Мои заказы»: аренда и/или отдельная покупка ски-пасса.</summary>
+    public class MyOrderHistoryItemDto
     {
-        public int RentalId { get; set; }
         public int OrderId { get; set; }
-        public DateTime Start { get; set; }
-        public DateTime End { get; set; }
+        /// <summary>«Аренда» или «Ски-пасс».</summary>
+        public string Kind { get; set; } = "";
+        public int? RentalId { get; set; }
+        public DateTime? Start { get; set; }
+        public DateTime? End { get; set; }
         public string Status { get; set; } = "";
+        /// <summary>Кратко об инвентаре или текст про ски-пасс.</summary>
+        public string Details { get; set; } = "";
         public decimal? TotalWithVat { get; set; }
-        public string? InventorySummary { get; set; }
     }
 
     public class AdminUserDto
@@ -62,6 +66,8 @@ namespace Prokat.API.DTO
         public int InventoryId { get; set; }
         public string Status { get; set; } = "";
         public string Type { get; set; } = "";
+        /// <summary>Полная строка комплекта для таблицы админки.</summary>
+        public string Summary { get; set; } = "";
         public string? Skis { get; set; }
         public string? Snowboard { get; set; }
         public string? Boots { get; set; }

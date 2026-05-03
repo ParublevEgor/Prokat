@@ -12,6 +12,7 @@ using Prokat.API.Models;
 
 using Prokat.API.Services;
 
+using System.Collections.Generic;
 using System.Security.Claims;
 
 
@@ -566,6 +567,7 @@ namespace Prokat.API.Controllers
                 InventoryId = i.ID_Инвентаря,
 
                 Type = i.ID_Лыжи != null ? "Лыжи" : (i.ID_Сноуборд != null ? "Сноуборд" : "Не определен"),
+                Summary = BuildAdminInventorySummary(i),
                 Skis = i.Лыжи == null ? null : $"{i.Лыжи.Название} ({i.Лыжи.Тип}, {i.Лыжи.РостовкаСм} см)",
                 Snowboard = i.Сноуборд == null ? null : $"{i.Сноуборд.Название} ({i.Сноуборд.Тип}, {i.Сноуборд.РостовкаСм} см)",
                 Boots = i.Ботинки == null ? null : $"{i.Ботинки.Название}, EU {i.Ботинки.РазмерEU}",
@@ -578,6 +580,42 @@ namespace Prokat.API.Controllers
 
 
             return Ok(rows);
+
+        }
+
+
+
+        private static string BuildAdminInventorySummary(Inventory i)
+
+        {
+
+            var parts = new List<string>();
+
+            if (i.Лыжи != null)
+
+                parts.Add($"{i.Лыжи.Название} ({i.Лыжи.Тип}, {i.Лыжи.РостовкаСм} см)");
+
+            if (i.Сноуборд != null)
+
+                parts.Add($"{i.Сноуборд.Название} ({i.Сноуборд.Тип}, {i.Сноуборд.РостовкаСм} см)");
+
+            if (i.Ботинки != null)
+
+                parts.Add($"ботинки {i.Ботинки.Название}, EU {i.Ботинки.РазмерEU}");
+
+            if (i.Палки != null)
+
+                parts.Add($"палки {i.Палки.Название} ({i.Палки.ДлинаСм} см)");
+
+            if (i.Шлем != null)
+
+                parts.Add($"шлем {i.Шлем.Название} ({i.Шлем.Размер})");
+
+            if (i.Очки != null)
+
+                parts.Add($"очки {i.Очки.Название} ({i.Очки.Размер})");
+
+            return parts.Count > 0 ? string.Join(" · ", parts) : $"#{i.ID_Инвентаря}: нет привязки к каталогу";
 
         }
 

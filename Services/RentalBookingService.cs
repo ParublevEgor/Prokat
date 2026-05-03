@@ -65,14 +65,14 @@ namespace Prokat.API.Services
             int inventoryId;
             if (request.InventoryId is int chosen)
             {
-                var free = await _inventory.GetFreeAsync(request.EquipmentType, startDate, endDate, ct);
+                var free = await _inventory.GetFreeAsync(request.EquipmentType.ToString(), startDate, endDate, ct);
                 if (free.All(x => x.Id != chosen))
                     throw new InvalidOperationException("Выбранный инвентарь занят в этом интервале");
                 inventoryId = chosen;
             }
             else
             {
-                var free = await _inventory.GetFreeAsync(request.EquipmentType, startDate, endDate, ct);
+                var free = await _inventory.GetFreeAsync(request.EquipmentType.ToString(), startDate, endDate, ct);
                 var first = free.FirstOrDefault() ?? throw new InvalidOperationException("Нет свободного инвентаря на выбранные даты");
                 inventoryId = first.Id;
             }
@@ -148,8 +148,17 @@ namespace Prokat.API.Services
             if (appUserId is null)
                 throw new InvalidOperationException("Войдите в систему, чтобы оформить покупку ски-пасса.");
 
-            var (startDate, endDate) = RentalWindowHelper.ComputeWindow(request.RentalDate, request.DurationKey);
+            var weekend = string.Equals(request.DayKind?.Trim(), "weekend", StringComparison.OrdinalIgnoreCase);
+            var mode = string.IsNullOrWhiteSpace(request.Mode) ? "time" : request.Mode.Trim();
+            var skipass = SkipPassStandalonePricing.GetPrice(
+                weekend,
+                mode,
+                request.TimeSlot,
+                request.LiftCount);
             var vatRate = await _settings.GetVatRateAsync(ct);
+            var baseAmount = skipass;
+            var total = Math.Round(baseAmount * (1 + vatRate), 2, MidpointRounding.AwayFromZero);
+            var now = DateTime.UtcNow;
 
             await using var tx = await _db.Database.BeginTransactionAsync(ct);
             var order = new Order();
@@ -169,14 +178,6 @@ namespace Prokat.API.Services
                 request.Deposit,
                 ct);
 
-            var (_, skipass, baseAmount, total) = await _pricing.QuoteAsync(
-                startDate,
-                endDate,
-                vatRate,
-                includeRental: false,
-                includeSkiPass: true,
-                ct);
-
             order.БазоваяСумма = baseAmount;
             order.Сумма_оплаты = total;
             await _db.SaveChangesAsync(ct);
@@ -186,8 +187,8 @@ namespace Prokat.API.Services
             {
                 OrderId = order.ID_Заказа,
                 ClientId = client.ID_Клиента,
-                Start = startDate,
-                End = endDate,
+                Start = now,
+                End = now,
                 SkiPassAmount = skipass,
                 TotalWithVat = total
             };

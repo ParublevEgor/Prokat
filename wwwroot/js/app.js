@@ -66,6 +66,8 @@ const COLUMN_LABELS = {
     totalWithVat: "Итог",
     total: "Итог",
     inventorySummary: "Инвентарь",
+    kind: "Тип",
+    details: "Содержание",
     id: "ID",
     login: "Логин",
     role: "Роль",
@@ -78,6 +80,7 @@ const COLUMN_LABELS = {
     durationText: "Время аренды",
     weekdayPrice: "Будни (руб.)",
     weekendPrice: "Выходные (руб.)",
+    summary: "Комплект",
     canDelete: "Можно удалить",
     deleteBlockedReason: "Причина блокировки"
 };
@@ -92,24 +95,41 @@ const ADMIN_RENTAL_COLS = [
     { key: "total", label: "Итог" }
 ];
 
-const MY_RENTAL_COLS = [
-    { key: "rentalId", label: "№ аренды" },
+const MY_ORDER_COLS = [
     { key: "orderId", label: "№ заказа" },
+    { key: "kind", label: "Тип" },
+    { key: "rentalId", label: "№ аренды" },
     { key: "start", label: "Начало" },
     { key: "end", label: "Окончание" },
     { key: "status", label: "Статус" },
-    { key: "inventorySummary", label: "Инвентарь" },
+    { key: "details", label: "Содержание" },
     { key: "totalWithVat", label: "Итог" }
 ];
 
-const ADMIN_INV_COLS = [
-    { key: "inventoryId", label: "ID инвентаря" },
-    { key: "type", label: "Тип" },
-    { key: "status", label: "Статус" },
-    { key: "skis", label: "Лыжи" },
-    { key: "snowboard", label: "Сноуборд" },
-    { key: "boots", label: "Ботинки" },
-    { key: "poles", label: "Палки" }
+function equipmentTypeLabel(value) {
+    return value === "Snowboard" ? "Сноуборд" : "Лыжи";
+}
+
+const CATALOG_SKI_TYPES = [
+    { value: "Горные", label: "Горные" },
+    { value: "Классические", label: "Классические" },
+    { value: "Коньковые", label: "Коньковые" },
+    { value: "Беговые", label: "Беговые" }
+];
+const CATALOG_BOARD_TYPES = [
+    { value: "Фрирайд", label: "Фрирайд" },
+    { value: "Фристайл", label: "Фристайл" },
+    { value: "Универсальный", label: "Универсальный" },
+    { value: "Олл-маунтин", label: "Олл-маунтин" }
+];
+const CATALOG_BOOT_TYPES = [
+    { value: "Лыжные", label: "Лыжные" },
+    { value: "Сноубордические", label: "Сноубордические" }
+];
+const CATALOG_POLE_TYPES = [
+    { value: "Горные", label: "Горные" },
+    { value: "Классические", label: "Классические" },
+    { value: "Телескопические", label: "Телескопические" }
 ];
 
 const CATALOG_CONFIG = {
@@ -118,7 +138,7 @@ const CATALOG_CONFIG = {
         endpoint: "/api/admin/catalog/skis",
         fields: [
             { key: "name", label: "Название", type: "text", required: true },
-            { key: "skiType", label: "Тип", type: "text", required: true, placeholder: "Классические / Коньковые / Горные" },
+            { key: "skiType", label: "Тип", type: "select", required: true, options: CATALOG_SKI_TYPES },
             { key: "lengthCm", label: "Ростовка (см)", type: "number", min: 100, max: 220, required: true },
             { key: "level", label: "Уровень", type: "text" },
             { key: "note", label: "Примечание", type: "text" }
@@ -129,7 +149,7 @@ const CATALOG_CONFIG = {
         endpoint: "/api/admin/catalog/snowboards",
         fields: [
             { key: "name", label: "Название", type: "text", required: true },
-            { key: "boardType", label: "Тип", type: "text", required: true, placeholder: "Фрирайд / Фристайл / Универсальный" },
+            { key: "boardType", label: "Тип", type: "select", required: true, options: CATALOG_BOARD_TYPES },
             { key: "lengthCm", label: "Ростовка (см)", type: "number", min: 120, max: 190, required: true },
             { key: "stiffness", label: "Жесткость", type: "text" },
             { key: "note", label: "Примечание", type: "text" }
@@ -140,7 +160,7 @@ const CATALOG_CONFIG = {
         endpoint: "/api/admin/catalog/boots",
         fields: [
             { key: "name", label: "Название", type: "text", required: true },
-            { key: "bootType", label: "Тип", type: "text", required: true, placeholder: "Лыжные / Сноубордические" },
+            { key: "bootType", label: "Тип", type: "select", required: true, options: CATALOG_BOOT_TYPES },
             { key: "sizeEu", label: "Размер EU", type: "number", min: 30, max: 52, required: true },
             { key: "note", label: "Примечание", type: "text" }
         ]
@@ -150,7 +170,7 @@ const CATALOG_CONFIG = {
         endpoint: "/api/admin/catalog/poles",
         fields: [
             { key: "name", label: "Название", type: "text", required: true },
-            { key: "polesType", label: "Тип", type: "text", required: true },
+            { key: "polesType", label: "Тип", type: "select", required: true, options: CATALOG_POLE_TYPES },
             { key: "lengthCm", label: "Длина (см)", type: "number", min: 70, max: 170, required: true },
             { key: "note", label: "Примечание", type: "text" }
         ]
@@ -175,15 +195,21 @@ const CATALOG_CONFIG = {
     }
 };
 
-let _adminInventoryTimer = null;
 let _activeCatalogKind = "skis";
+let _skipassFlowStep = 1;
 
 function formatCell(key, value) {
     if (value == null) return "";
     const lower = key.toLowerCase();
     if (lower.includes("start") || lower.includes("end")) return escapeHtml(fmt(value));
-    if (lower === "total" || lower.includes("sum") || lower.includes("price") || lower.includes("vat"))
-        return escapeHtml(`${value} ₽`);
+    const currency =
+        lower === "total" ||
+        lower === "totalwithvat" ||
+        lower.endsWith("price") ||
+        lower === "rentalamount" ||
+        lower === "skipassamount" ||
+        lower === "baseamount";
+    if (currency) return escapeHtml(`${value} ₽`);
     if (typeof value === "boolean") return value ? "Да" : "Нет";
     return escapeHtml(value);
 }
@@ -202,13 +228,6 @@ function renderFixedColumnsTable(container, rows, columns) {
     container.innerHTML = `<table>${h}<tbody>${b}</tbody></table>`;
 }
 
-function stopAdminInventoryPoll() {
-    if (_adminInventoryTimer) {
-        clearInterval(_adminInventoryTimer);
-        _adminInventoryTimer = null;
-    }
-}
-
 async function refreshAdminUndoState() {
     const btn = byId("btn-admin-undo");
     if (!btn) return;
@@ -218,22 +237,6 @@ async function refreshAdminUndoState() {
     } catch {
         btn.disabled = true;
     }
-}
-
-function startAdminInventoryPoll() {
-    stopAdminInventoryPoll();
-    const tick = async () => {
-        const wrap = byId("admin-inventory-table");
-        const panel = byId("admin-panel");
-        if (!wrap || !panel || panel.classList.contains("hidden")) {
-            stopAdminInventoryPoll();
-            return;
-        }
-        try {
-            renderFixedColumnsTable(wrap, await api("/api/admin/inventory/status"), ADMIN_INV_COLS);
-        } catch (_) { /* сеть недоступна — пропуск кадра */ }
-    };
-    _adminInventoryTimer = setInterval(tick, 12000);
 }
 
 function openAdminUserDialog(d) {
@@ -350,7 +353,7 @@ function computeWindowLocal(dateValue, durationKey) {
 }
 
 function setBookingStep(n) {
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= 5; i++) {
         const sec = byId(`booking-step-${i}`);
         if (sec) sec.classList.toggle("hidden", i !== n);
     }
@@ -373,8 +376,8 @@ function resetBookingWizard() {
         freeEl.classList.remove("inventory-cards-grid");
         freeEl.innerHTML = "";
     }
-    const next3 = byId("btn-booking-next-3");
-    if (next3) next3.disabled = true;
+    const nextKit = byId("btn-booking-next-4");
+    if (nextKit) nextKit.disabled = true;
     const reco = byId("booking-recommendations");
     if (reco) reco.innerHTML = "";
     const sum = byId("booking-summary");
@@ -383,6 +386,8 @@ function resetBookingWizard() {
         c.classList.remove("inv-card--selected");
         c.setAttribute("aria-selected", "false");
     });
+    const skiNo = form.querySelector('input[name="skiPassChoice"][value="no"]');
+    if (skiNo) skiNo.checked = true;
     setBookingStep(1);
 }
 
@@ -419,7 +424,7 @@ function renderRecommendationsPanel() {
 }
 
 function renderInventoryCards(container, rows, equipmentType) {
-    const isSkis = equipmentType === "Лыжи";
+    const isSkis = equipmentType === "Skis";
     if (!rows?.length) {
         container.classList.add("empty");
         container.classList.remove("inventory-cards-grid");
@@ -471,7 +476,7 @@ function selectInventoryCard(id) {
             if (s && val != null && val !== "") s.value = String(val);
         };
         setSel("ботинки", row.boots);
-        if (form.querySelector('[name="тип"]').value !== "Сноуборд")
+        if (form.querySelector('[name="equipmentType"]')?.value !== "Snowboard")
             setSel("палки", row.poles);
         setSel("шлем", row.helmet);
         setSel("очки", row.goggles);
@@ -481,7 +486,7 @@ function selectInventoryCard(id) {
         c.classList.toggle("inv-card--selected", on);
         c.setAttribute("aria-selected", on ? "true" : "false");
     });
-    const next = byId("btn-booking-next-3");
+    const next = byId("btn-booking-next-4");
     if (next) next.disabled = !id;
 }
 
@@ -491,12 +496,12 @@ function refilterInventoryCards() {
     if (!form || !container) return;
     const all = form._freeRows || [];
     const filtered = filterInventoryRows(all, form);
-    const type = form.querySelector('[name="тип"]').value;
+    const type = form.querySelector('[name="equipmentType"]').value;
     renderInventoryCards(container, filtered, type);
     const sel = form._selectedInventoryId;
     if (sel && !filtered.some((r) => r.id === sel)) {
         form._selectedInventoryId = null;
-        const next = byId("btn-booking-next-3");
+        const next = byId("btn-booking-next-4");
         if (next) next.disabled = true;
     } else if (sel)
         selectInventoryCard(sel);
@@ -518,7 +523,7 @@ async function renderBookingSummary() {
     const id = form._selectedInventoryId;
     const row = (form._freeRows || []).find((r) => r.id === id);
     const dateStr = fd.get("rentalDate");
-    const typ = fd.get("тип") || "";
+    const typ = equipmentTypeLabel(String(fd.get("equipmentType") || "Skis"));
     let dtLabel = String(dateStr || "");
     try {
         if (dateStr)
@@ -528,7 +533,7 @@ async function renderBookingSummary() {
     const dur = durationHuman(durKey);
     const kitTitle = row?.cardTitle ? escapeHtml(row.cardTitle) : (id ? `Комплект №${id}` : "—");
     const kitSub = row?.cardSubtitle ? escapeHtml(row.cardSubtitle) : "";
-    const includeSkiPass = fd.get("includeSkiPass") === "on";
+    const includeSkiPass = fd.get("skiPassChoice") === "yes";
     const window = computeWindowLocal(String(fd.get("rentalDate") || ""), durKey);
     const fromTo = (window.start && window.end)
         ? `${window.start.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })} — ${window.end.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}`
@@ -600,6 +605,15 @@ function renderCatalogForm(kind, item = null) {
         const maxAttr = typeof f.max === "number" ? ` max="${f.max}"` : "";
         const req = f.required ? " required" : "";
         const ph = f.placeholder ? ` placeholder="${escapeHtml(f.placeholder)}"` : "";
+        if (f.type === "select" && Array.isArray(f.options)) {
+            const opts = f.options.map((o) => {
+                const sel = value === o.value ? " selected" : "";
+                return `<option value="${escapeHtml(o.value)}"${sel}>${escapeHtml(o.label)}</option>`;
+            }).join("");
+            return `<label>${escapeHtml(f.label)}
+                <select name="${f.key}"${req}>${opts}</select>
+            </label>`;
+        }
         return `<label>${escapeHtml(f.label)}
             <input name="${f.key}" type="${f.type}" value="${escapeHtml(value)}"${minAttr}${maxAttr}${req}${ph} />
         </label>`;
@@ -666,7 +680,7 @@ function filterInventoryRows(rows, form) {
     const poles   = form.querySelector('[name="палки"]')?.value ?? "";
     const helmet  = form.querySelector('[name="шлем"]')?.value ?? "";
     const goggles = form.querySelector('[name="очки"]')?.value ?? "";
-    const isSnowboard = form.querySelector('[name="тип"]')?.value === "Сноуборд";
+    const isSnowboard = form.querySelector('[name="equipmentType"]')?.value === "Snowboard";
     return rows.filter((r) =>
         (!boots || r.boots === boots) &&
         (isSnowboard || !poles || r.poles === poles) &&
@@ -689,9 +703,6 @@ function applySessionUI() {
     byId("admin-panel")?.classList.toggle("hidden", !(auth && role === "Admin"));
     byId("btn-logout")?.classList.toggle("hidden", !auth);
     if (byId("session-info")) byId("session-info").textContent = auth ? `Вы вошли как ${login} (${role})` : "";
-
-    if (!(auth && role === "Admin"))
-        stopAdminInventoryPoll();
 
     if (auth && role === "Admin")
         refreshAdminUndoState();
@@ -871,10 +882,10 @@ on("btn-remove-avatar", "click", async () => {
 });
 
 function applyEquipmentTypeUI() {
-    const type = byId("sel-type")?.value;
+    const type = byId("sel-equipment-type")?.value;
     const polesLabel = byId("label-poles");
     if (!polesLabel) return;
-    polesLabel.classList.toggle("hidden", type === "Сноуборд");
+    polesLabel.classList.toggle("hidden", type === "Snowboard");
 }
 
 /* ── инвентарь: загрузка и фильтрация ───────────────────────────── */
@@ -907,7 +918,7 @@ async function loadFreeInventory() {
         const q = new URLSearchParams({
             start:    start.toISOString(),
             end:      end.toISOString(),
-            type:     fd.get("тип"),
+            type:     fd.get("equipmentType"),
             shoeSize,
             height
         });
@@ -930,8 +941,8 @@ async function loadFreeInventory() {
 
         applyEquipmentTypeUI();
         wireInventoryFilterSelects(form);
-        renderInventoryCards(document.getElementById("free-list-user"), rows, fd.get("тип"));
-        setBookingStep(3);
+        renderInventoryCards(document.getElementById("free-list-user"), rows, fd.get("equipmentType"));
+        setBookingStep(4);
         setMsg(msgEl, `Найдено комплектов: ${rows.length}. Выберите карточку или сузьте список фильтрами ниже.`, true);
     } catch (e) {
         setMsg(msgEl, `Ошибка загрузки инвентаря: ${e.message}`, false);
@@ -941,12 +952,12 @@ async function loadFreeInventory() {
 on("btn-free-user", "click", loadFreeInventory);
 
 /* При смене типа только скрываем палки для сноуборда — без автозагрузки */
-on("sel-type", "change", () => {
+on("sel-equipment-type", "change", () => {
     applyEquipmentTypeUI();
 });
 
 /* ── мастер бронирования ─────────────────────────────────────────── */
-on("btn-booking-next-1", "click", async () => {
+on("btn-booking-next-1", "click", () => {
     const form = byId("booking-form-user");
     const fd = new FormData(form);
     const msg = byId("booking-msg-user");
@@ -954,16 +965,8 @@ on("btn-booking-next-1", "click", async () => {
         setMsg(msg, "Укажите день аренды.", false);
         return;
     }
-    try {
-        await loadMyProfile();
-        renderRecommendationsPanel();
-        clearBookingMsg();
-        setBookingStep(2);
-    } catch {
-        renderRecommendationsPanel();
-        clearBookingMsg();
-        setBookingStep(2);
-    }
+    clearBookingMsg();
+    setBookingStep(2);
 });
 
 on("btn-booking-back-2", "click", () => {
@@ -971,12 +974,21 @@ on("btn-booking-back-2", "click", () => {
     setBookingStep(1);
 });
 
+on("btn-booking-next-2", "click", async () => {
+    try {
+        await loadMyProfile();
+    } catch (_) { /* профиль недоступен — всё равно показываем подбор */ }
+    renderRecommendationsPanel();
+    clearBookingMsg();
+    setBookingStep(3);
+});
+
 on("btn-booking-back-3", "click", () => {
     clearBookingMsg();
     setBookingStep(2);
 });
 
-on("btn-booking-next-3", "click", async () => {
+on("btn-booking-next-4", "click", async () => {
     const form = byId("booking-form-user");
     const msg = byId("booking-msg-user");
     if (!form?._selectedInventoryId) {
@@ -985,12 +997,17 @@ on("btn-booking-next-3", "click", async () => {
     }
     await renderBookingSummary();
     clearBookingMsg();
-    setBookingStep(4);
+    setBookingStep(5);
 });
 
 on("btn-booking-back-4", "click", () => {
     clearBookingMsg();
     setBookingStep(3);
+});
+
+on("btn-booking-back-5", "click", () => {
+    clearBookingMsg();
+    setBookingStep(4);
 });
 
 on("btn-booking-confirm", "click", async () => {
@@ -1008,8 +1025,8 @@ on("btn-booking-confirm", "click", async () => {
             body: {
                 rentalDate:    fd.get("rentalDate"),
                 durationKey:   fd.get("durationKey"),
-                equipmentType: fd.get("тип"),
-                includeSkiPass: fd.get("includeSkiPass") === "on",
+                equipmentType: fd.get("equipmentType"),
+                includeSkiPass: fd.get("skiPassChoice") === "yes",
                 inventoryId
             }
         });
@@ -1047,13 +1064,13 @@ on("booking-form-user", "submit", (ev) => {
     });
 })();
 
-/* ── история аренд ───────────────────────────────────────────────── */
+/* ── мои заказы (аренда + ски-пасс) ──────────────────────────────── */
 on("btn-history", "click", async () => {
     const wrap = document.getElementById("history-table");
     const open = toggleCollapsed("history-table");
     if (!open) return;
     try {
-        renderFixedColumnsTable(wrap, await api("/api/rentals/my"), MY_RENTAL_COLS);
+        renderFixedColumnsTable(wrap, await api("/api/rentals/my"), MY_ORDER_COLS);
     } catch (e) {
         wrap.textContent = e.message;
     }
@@ -1063,58 +1080,139 @@ on("btn-fit-guide", "click", () => {
     toggleCollapsed("fit-guide-wrap");
 });
 
-async function buildPriceHtml() {
-    const rows = await api("/api/settings/tariffs");
-    const columns = rows.map((r) => r.durationHours >= 12 ? "День" : `${r.durationHours} ч`);
-    const renderRow = (label, key) =>
-        `<tr><td>${escapeHtml(label)}</td>${rows.map((r) => `<td>${r[key] ?? "—"}${r[key] != null ? " ₽" : ""}</td>`).join("")}</tr>`;
-    const head = `<thead><tr><th>Позиция</th>${columns.map((c) => `<th>${c}</th>`).join("")}</tr></thead>`;
-    const body = `<tbody>
-        ${renderRow("Прокат (будни)", "rentalWeekday")}
-        ${renderRow("Прокат (выходные)", "rentalWeekend")}
-        ${renderRow("Ски-пасс (будни)", "skiPassWeekday")}
-        ${renderRow("Ски-пасс (выходные)", "skiPassWeekend")}
-    </tbody>`;
-    return `<table>${head}${body}</table>`;
+on("btn-panel-prices", "click", () => {
+    toggleCollapsed("panel-prices");
+});
+
+function setSkipassFlowStep(step) {
+    _skipassFlowStep = step;
+    for (let i = 1; i <= 3; i++) {
+        byId(`skipass-flow-step-${i}`)?.classList.toggle("hidden", i !== step);
+    }
+    document.querySelectorAll("[data-skip-flow-indicator]").forEach((el) => {
+        const sn = Number(el.getAttribute("data-skip-flow-indicator"));
+        el.classList.toggle("active", sn === step);
+        el.classList.toggle("done", sn < step);
+    });
+    byId("skipass-flow-back")?.classList.toggle("hidden", step === 1);
+    byId("skipass-flow-next")?.classList.toggle("hidden", step === 3);
+    byId("skipass-flow-submit")?.classList.toggle("hidden", step !== 3);
 }
 
-on("btn-load-tariffs", "click", () => {
-    const wrap = byId("tariffs-table");
-    if (!wrap) return;
-    const open = toggleCollapsed("tariffs-table");
-    if (open && !wrap.dataset.ready) {
-        buildPriceHtml()
-            .then((html) => {
-                wrap.innerHTML = html;
-                wrap.dataset.ready = "1";
-            })
-            .catch((e) => {
-                wrap.textContent = e.message;
-            });
+function syncSkipassFlowPanels() {
+    const form = byId("skipass-flow-form");
+    if (!form) return;
+    const lifts = form.querySelector('input[name="skipassMode"]:checked')?.value === "lifts";
+    byId("skipass-flow-time-panel")?.classList.toggle("hidden", lifts);
+    byId("skipass-flow-lifts-panel")?.classList.toggle("hidden", !lifts);
+}
+
+function openSkipassOrderDialog() {
+    const dlg = byId("skipass-order-dialog");
+    if (!dlg) return;
+    const msg = byId("skipass-flow-msg");
+    if (msg) {
+        msg.textContent = "";
+        msg.classList.remove("ok", "err");
+    }
+    const form = byId("skipass-flow-form");
+    form?.reset();
+    const timeRadio = form?.querySelector('input[name="skipassMode"][value="time"]');
+    if (timeRadio) timeRadio.checked = true;
+    syncSkipassFlowPanels();
+    setSkipassFlowStep(1);
+    dlg.showModal();
+}
+
+function buildSkipassSummaryHtml(fd) {
+    const form = byId("skipass-flow-form");
+    const dayKind = fd.get("dayKind") === "weekend" ? "Выходные и праздники" : "Будни";
+    const liftsMode = fd.get("skipassMode") === "lifts";
+    const modeLabel = liftsMode ? "По числу подъёмов" : "По времени";
+    let detail = "";
+    if (liftsMode) {
+        const liftsSel = form?.querySelector('select[name="liftCount"]');
+        detail =
+            liftsSel?.selectedOptions?.[0]?.text?.trim() ||
+            `${fd.get("liftCount")} подъёмов`;
+    } else {
+        const slot = fd.get("timeSlot") || "";
+        const slotLabels = { 2: "2 часа", 3: "3 часа", 4: "4 часа", day: "День" };
+        detail = slotLabels[slot] || slot;
+    }
+    return `<dl class="skipass-summary-dl">
+      <dt>Тип дня</dt><dd>${escapeHtml(dayKind)}</dd>
+      <dt>Вариант</dt><dd>${escapeHtml(modeLabel)}</dd>
+      <dt>Параметры</dt><dd>${escapeHtml(detail)}</dd>
+    </dl>`;
+}
+
+on("btn-open-skipass", "click", () => openSkipassOrderDialog());
+
+on("skipass-dialog-close", "click", () => byId("skipass-order-dialog")?.close());
+
+on("skipass-flow-cancel", "click", () => byId("skipass-order-dialog")?.close());
+
+on("skipass-flow-next", "click", () => {
+    const form = byId("skipass-flow-form");
+    const msg = byId("skipass-flow-msg");
+    if (!form) return;
+    if (msg) {
+        msg.textContent = "";
+        msg.classList.remove("ok", "err");
+    }
+    const fd = new FormData(form);
+    if (_skipassFlowStep === 1) {
+        syncSkipassFlowPanels();
+        setSkipassFlowStep(2);
+        return;
+    }
+    if (_skipassFlowStep === 2) {
+        const sumBox = byId("skipass-flow-summary");
+        if (sumBox) sumBox.innerHTML = buildSkipassSummaryHtml(fd);
+        setSkipassFlowStep(3);
     }
 });
 
-on("skipass-form", "submit", async (ev) => {
+on("skipass-flow-back", "click", () => {
+    if (_skipassFlowStep <= 1) return;
+    setSkipassFlowStep(_skipassFlowStep - 1);
+});
+
+on("skipass-flow-form", "submit", async (ev) => {
     ev.preventDefault();
-    const fd = new FormData(ev.target);
-    const msg = byId("skipass-msg");
+    const form = ev.target;
+    const fd = new FormData(form);
+    const msg = byId("skipass-flow-msg");
+    const mode = fd.get("skipassMode") === "lifts" ? "lifts" : "time";
+    const body = {
+        dayKind: fd.get("dayKind"),
+        mode,
+        timeSlot: mode === "time" ? fd.get("timeSlot") : null,
+        liftCount: mode === "lifts" ? Number(fd.get("liftCount")) : null
+    };
     try {
-        const res = await api("/api/bookings/skipass", {
-            method: "POST",
-            body: {
-                rentalDate: fd.get("rentalDate"),
-                durationKey: fd.get("durationKey")
-            }
-        });
-        setMsg(msg, `Ски-пасс оформлен. Заказ №${res.orderId}, к оплате: ${res.totalWithVat} ₽`, true);
+        const res = await api("/api/bookings/skipass", { method: "POST", body });
+        const mainMsg = byId("booking-msg-user");
+        const okText = `Ски-пасс оформлен: заказ №${res.orderId}, к оплате ${res.totalWithVat} ₽`;
+        if (mainMsg) setMsg(mainMsg, okText, true);
+        if (msg) setMsg(msg, okText, true);
+        byId("skipass-order-dialog")?.close();
     } catch (e) {
-        setMsg(msg, e.message, false);
+        if (msg) setMsg(msg, e.message, false);
     }
 });
+
+(function wireSkipassFlowRadios() {
+    const form = byId("skipass-flow-form");
+    if (!form) return;
+    form.querySelectorAll('input[name="skipassMode"]').forEach((r) =>
+        r.addEventListener("change", syncSkipassFlowPanels));
+})();
 
 /* ── админ-панель ────────────────────────────────────────────────── */
 on("btn-admin-users", "click", async () => {
-    const open = toggleCollapsed("admin-users-table");
+    const open = toggleCollapsed("admin-users-wrap");
     if (!open) return;
     try {
         renderAdminUsersTable(document.getElementById("admin-users-table"), await api("/api/admin/users"));
@@ -1146,21 +1244,6 @@ on("btn-admin-rentals", "click", async () => {
         );
     } catch (e) {
         document.getElementById("admin-rentals-table").textContent = e.message;
-    }
-});
-
-on("btn-admin-inventory", "click", async () => {
-    const wrap = document.getElementById("admin-inventory-table");
-    const open = toggleCollapsed("admin-inventory-table");
-    if (!open) {
-        stopAdminInventoryPoll();
-        return;
-    }
-    try {
-        renderFixedColumnsTable(wrap, await api("/api/admin/inventory/status"), ADMIN_INV_COLS);
-        startAdminInventoryPoll();
-    } catch (e) {
-        wrap.textContent = e.message;
     }
 });
 
@@ -1254,8 +1337,6 @@ on("admin-user-dialog-close", "click", () => {
     const dateValue = `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
     const bookingDate = document.querySelector('#booking-form-user [name="rentalDate"]');
     if (bookingDate) bookingDate.value = dateValue;
-    const skipassDate = document.querySelector('#skipass-form [name="rentalDate"]');
-    if (skipassDate) skipassDate.value = dateValue;
 })();
 
 applySessionUI();

@@ -1,14 +1,16 @@
 :root {
-    --bg: #f4f6f9;
+    --bg: #eef2f8;
     --surface: #fff;
-    --text: #1c2430;
-    --muted: #5c6778;
-    --border: #d8dee8;
-    --accent: #2c5aa0;
-    --accent-hover: #234a84;
+    --text: #152030;
+    --muted: #556070;
+    --border: #c9d5e6;
+    --accent: #2f6fbf;
+    --accent-hover: #265fa8;
+    --accent-soft: #e8f1fb;
     --ok: #1e7a4d;
     --err: #b83232;
-    --radius: 8px;
+    --radius: 10px;
+    --btn-shadow: 0 2px 8px rgba(28, 72, 140, 0.18);
     font-family: system-ui, "Segoe UI", sans-serif;
     font-size: 17px;
 }
@@ -135,27 +137,33 @@ label {
 }
 
 input,
-select,
-button {
+select {
     font: inherit;
     color: var(--text);
     background: #fff;
     border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 0.45rem 0.55rem;
+    border-radius: 8px;
+    padding: 0.5rem 0.65rem;
+    min-height: 2.65rem;
 }
 
 button {
+    font: inherit;
     cursor: pointer;
     background: var(--accent);
-    border-color: var(--accent);
+    border: 1px solid var(--accent);
     color: #fff;
-    font-weight: 600;
+    font-weight: 650;
+    border-radius: 8px;
+    padding: 0.55rem 1rem;
+    min-height: 2.75rem;
+    box-shadow: var(--btn-shadow);
     transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 
 button:active {
-    transform: translateY(1px) scale(0.99);
+    transform: translateY(1px);
+    box-shadow: 0 1px 4px rgba(28, 72, 140, 0.15);
 }
 
 button:hover {
@@ -164,13 +172,26 @@ button:hover {
 }
 
 button.secondary {
-    background: #fff;
+    background: var(--surface);
     color: var(--accent);
-    border-color: var(--border);
+    border-color: #b4c8e8;
+    box-shadow: none;
 }
 
 button.secondary:hover {
-    background: var(--bg);
+    background: var(--accent-soft);
+    border-color: var(--accent);
+}
+
+button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.btn-lg {
+    min-height: 2.85rem;
+    padding: 0.6rem 1.15rem;
+    font-size: 0.98rem;
 }
 
 .actions {
@@ -216,6 +237,8 @@ button.secondary:hover {
     background: transparent;
     color: var(--accent);
     padding: 0;
+    min-height: unset;
+    box-shadow: none;
     font-weight: 600;
     cursor: pointer;
 }
@@ -237,6 +260,10 @@ button.secondary:hover {
     opacity: 0;
     margin-top: 0 !important;
     overflow: hidden;
+}
+
+#panel-prices.table-wrap:not(.collapsed) {
+    max-height: none;
 }
 
 .catalog-wrap {
@@ -336,7 +363,7 @@ th,
 td {
     border-bottom: 1px solid var(--border);
     padding: 0.45rem 0.5rem;
-    text-align: left;
+    text-align: center;
 }
 
 th {
@@ -411,6 +438,146 @@ th {
     background: var(--accent);
     color: #fff;
     border-color: var(--accent);
+}
+
+.ski-pass-step {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.section-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.section-toolbar .section-toggle-btn {
+    flex: 1 1 170px;
+    box-shadow: none;
+}
+
+.section-toggle-btn {
+    flex: 1 1 160px;
+    min-height: 2.75rem;
+    padding: 0.55rem 0.95rem;
+    border-radius: var(--radius);
+    border: 1px solid #b4c8e8;
+    background: linear-gradient(180deg, #f5f9ff 0%, var(--accent-soft) 100%);
+    font-weight: 650;
+    font-size: 0.94rem;
+    color: #1a3d66;
+    cursor: pointer;
+}
+
+.section-toggle-btn:hover {
+    border-color: #7ea8dc;
+    background: linear-gradient(180deg, #eef5fc 0%, #ddeaf8 100%);
+    color: #102d50;
+}
+
+.btn-toolbar-primary {
+    flex: 1 1 220px;
+    min-height: 2.85rem;
+    padding: 0.6rem 1.05rem;
+    font-size: 0.96rem;
+    font-weight: 750;
+    letter-spacing: 0.01em;
+    border-radius: var(--radius);
+    border-color: var(--accent);
+    background: linear-gradient(180deg, #4a8fd8 0%, var(--accent) 55%, #265fa8 100%);
+    color: #fff;
+    box-shadow: 0 3px 12px rgba(35, 88, 168, 0.35);
+}
+
+.btn-toolbar-primary:hover {
+    border-color: var(--accent-hover);
+    background: linear-gradient(180deg, #5599df 0%, var(--accent-hover) 55%, #214e91 100%);
+}
+
+.btn-toolbar-primary:active {
+    transform: translateY(1px);
+}
+
+.admin-users-wrap:not(.collapsed) {
+    padding: 0.65rem 0 0;
+}
+
+.admin-users-undo-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.45rem;
+}
+
+.admin-users-table-host {
+    overflow-x: auto;
+}
+
+.price-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.price-mountain-card {
+    position: relative;
+    border-radius: 6px;
+    padding: 1rem 0.85rem;
+    color: #f5f8ff;
+    background:
+        linear-gradient(165deg, rgba(18, 28, 44, 0.92) 0%, rgba(28, 42, 62, 0.94) 50%, rgba(16, 24, 38, 0.96) 100%),
+        radial-gradient(120% 80% at 50% 0%, rgba(88, 120, 168, 0.35) 0%, transparent 55%);
+    border: 2px solid rgba(255, 255, 255, 0.78);
+    box-shadow: 0 8px 28px rgba(12, 18, 28, 0.18);
+}
+
+.price-mountain-heading {
+    margin: 0 0 0.75rem;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.price-subheading {
+    margin: 0.65rem 0 0.4rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    opacity: 0.92;
+}
+
+.price-mountain-table {
+    width: 100%;
+    font-size: 0.82rem;
+}
+
+.price-mountain-table th,
+.price-mountain-table td {
+    border: 1px solid rgba(255, 255, 255, 0.88) !important;
+    color: #fff;
+    padding: 0.45rem 0.35rem;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.price-mountain-table thead th {
+    color: #fff;
+    font-weight: 700;
+}
+
+.price-mountain-table tbody th[scope="row"] {
+    font-weight: 600;
+    hyphens: auto;
+    word-break: break-word;
+}
+
+.price-footnote {
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin: 0.25rem 0 0;
 }
 
 .booking-step-hint {
@@ -576,4 +743,146 @@ th {
 
 .booking-summary-card dd {
     margin: 0;
+}
+
+/* ── Диалог отдельного заказа ски-пасса ──────────────────────────── */
+.skipass-order-dialog {
+    max-width: min(480px, 94vw);
+}
+
+.skipass-dialog-inner {
+    padding: 1rem 1.35rem 1.2rem;
+}
+
+.skipass-dialog-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.35rem;
+}
+
+.skipass-dialog-head h3 {
+    margin: 0;
+    font-size: 1.08rem;
+    font-weight: 650;
+    color: var(--text);
+    line-height: 1.35;
+}
+
+.skipass-dialog-intro {
+    margin: 0 0 0.85rem;
+}
+
+.dialog-icon-close {
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    min-height: unset;
+    padding: 0;
+    line-height: 1;
+    font-size: 1.35rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    box-shadow: none;
+}
+
+.dialog-icon-close:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: #a8c4e8;
+}
+
+.skipass-flow-progress {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.skip-flow-pill {
+    font-size: 0.76rem;
+    font-weight: 650;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--muted);
+    border: 1px solid transparent;
+}
+
+.skip-flow-pill.done {
+    background: #e3edf9;
+    color: #2563a8;
+    border-color: #b8d0ef;
+}
+
+.skip-flow-pill.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+.skipass-flow-panel {
+    min-height: 5rem;
+}
+
+.skipass-mode-group .field-label-span {
+    display: block;
+    width: 100%;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 0.25rem;
+}
+
+.skipass-mode-group .inline-check {
+    margin-top: 0.4rem;
+}
+
+.skipass-summary-hint {
+    margin: 0 0 0.65rem;
+}
+
+.skipass-flow-summary {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.85rem 1rem;
+    background: var(--accent-soft);
+}
+
+.skipass-summary-dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.4rem 1rem;
+    margin: 0;
+    font-size: 0.92rem;
+}
+
+.skipass-summary-dl dt {
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.skipass-summary-dl dd {
+    margin: 0;
+    color: var(--text);
+    font-weight: 500;
+}
+
+.skipass-dialog-actions {
+    margin-top: 1rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--border);
+    justify-content: flex-end;
+}
+
+/* Кнопки админских вкладок справочника */
+.catalog-tab {
+    min-height: 2.6rem;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.9rem;
 }

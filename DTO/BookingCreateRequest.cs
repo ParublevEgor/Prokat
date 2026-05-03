@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Prokat.API.Models;
 
 namespace Prokat.API.DTO
 {
@@ -14,9 +15,9 @@ namespace Prokat.API.DTO
         public int? Weight { get; set; }
         public int? Deposit { get; set; }
 
-        /// <summary>Лыжи или Сноуборд</summary>
+        /// <summary>Тип комплекта проката.</summary>
         [Required]
-        public string EquipmentType { get; set; } = "Лыжи";
+        public EquipmentInventoryType EquipmentType { get; set; } = EquipmentInventoryType.Skis;
 
         /// <summary>Календарный день аренды (дата без привязки к часовому поясу — используется дата).</summary>
         [Required]

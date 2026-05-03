@@ -90,9 +90,10 @@
                 <div class="booking-wizard" id="booking-wizard">
                     <nav class="booking-progress" aria-label="Этапы бронирования">
                         <span class="step-pill active" data-step-indicator="1">Параметры</span>
-                        <span class="step-pill" data-step-indicator="2">Подбор</span>
-                        <span class="step-pill" data-step-indicator="3">Комплект</span>
-                        <span class="step-pill" data-step-indicator="4">Подтверждение</span>
+                        <span class="step-pill" data-step-indicator="2">Ски-пасс</span>
+                        <span class="step-pill" data-step-indicator="3">Подбор</span>
+                        <span class="step-pill" data-step-indicator="4">Комплект</span>
+                        <span class="step-pill" data-step-indicator="5">Подтверждение</span>
                     </nav>
 
                     <section class="booking-step" id="booking-step-1" data-booking-step="1">
@@ -106,15 +107,11 @@
                                     <option value="day">Весь день (9:00–21:00)</option>
                                 </select>
                             </label>
-                            <label>Тип
-                                <select name="тип" id="sel-type">
-                                    <option value="Лыжи">Лыжи</option>
-                                    <option value="Сноуборд">Сноуборд</option>
+                            <label>Тип инвентаря
+                                <select name="equipmentType" id="sel-equipment-type" required>
+                                    <option value="Skis">Лыжи</option>
+                                    <option value="Snowboard">Сноуборд</option>
                                 </select>
-                            </label>
-                            <label class="inline-check">
-                                <input name="includeSkiPass" type="checkbox" />
-                                Добавить ски-пасс к бронированию
                             </label>
                         </div>
                         <div class="actions" style="margin-top:0.75rem">
@@ -123,15 +120,32 @@
                     </section>
 
                     <section class="booking-step hidden" id="booking-step-2" data-booking-step="2">
-                        <div id="booking-recommendations" class="reco-panel" aria-live="polite"></div>
-                        <p class="hint booking-step-hint">Нажмите кнопку ниже, чтобы загрузить свободные комплекты на выбранные дату и время.</p>
-                        <div class="actions">
+                        <div class="ski-pass-step" role="group" aria-label="Ски-пасс">
+                            <label class="inline-check">
+                                <input type="radio" name="skiPassChoice" value="no" checked />
+                                Без ски-пасса
+                            </label>
+                            <label class="inline-check">
+                                <input type="radio" name="skiPassChoice" value="yes" />
+                                Ски-пасс в заказе
+                            </label>
+                        </div>
+                        <div class="actions" style="margin-top:0.75rem">
                             <button type="button" id="btn-booking-back-2" class="secondary">Назад</button>
-                            <button type="button" id="btn-free-user">Найти свободные комплекты</button>
+                            <button type="button" id="btn-booking-next-2">Далее</button>
                         </div>
                     </section>
 
                     <section class="booking-step hidden" id="booking-step-3" data-booking-step="3">
+                        <div id="booking-recommendations" class="reco-panel" aria-live="polite"></div>
+                        <p class="hint booking-step-hint">Нажмите кнопку ниже, чтобы загрузить свободные комплекты на выбранные дату и время.</p>
+                        <div class="actions">
+                            <button type="button" id="btn-booking-back-3" class="secondary">Назад</button>
+                            <button type="button" id="btn-free-user">Найти свободные комплекты</button>
+                        </div>
+                    </section>
+
+                    <section class="booking-step hidden" id="booking-step-4" data-booking-step="4">
                         <p class="hint">Выберите комплект. Карточки с меткой «Рекомендуем» подобраны по размеру обуви и росту из вашего профиля.</p>
                         <div id="free-list-user" class="inventory-cards-host empty" role="listbox" aria-label="Доступные комплекты"></div>
                         <details class="inventory-filters-details">
@@ -144,15 +158,15 @@
                             </div>
                         </details>
                         <div class="actions" style="margin-top:0.75rem">
-                            <button type="button" id="btn-booking-back-3" class="secondary">Назад</button>
-                            <button type="button" id="btn-booking-next-3" disabled>Далее</button>
+                            <button type="button" id="btn-booking-back-4" class="secondary">Назад</button>
+                            <button type="button" id="btn-booking-next-4" disabled>Далее</button>
                         </div>
                     </section>
 
-                    <section class="booking-step hidden" id="booking-step-4" data-booking-step="4">
+                    <section class="booking-step hidden" id="booking-step-5" data-booking-step="5">
                         <div id="booking-summary" class="booking-summary-card"></div>
                         <div class="actions">
-                            <button type="button" id="btn-booking-back-4" class="secondary">Назад</button>
+                            <button type="button" id="btn-booking-back-5" class="secondary">Назад</button>
                             <button type="button" id="btn-booking-confirm">Подтвердить бронирование</button>
                         </div>
                     </section>
@@ -160,16 +174,15 @@
             </form>
             <p id="booking-msg-user" class="msg" role="status"></p>
 
-            <h2 style="margin-top:1rem">Мои аренды</h2>
-            <div class="actions" style="margin-bottom:0.5rem">
-                <button type="button" id="btn-history" class="secondary">Показать / скрыть список</button>
+            <div class="section-toolbar">
+                <button type="button" id="btn-open-skipass" class="btn-toolbar-primary">Оформить ски-пасс</button>
+                <button type="button" id="btn-history" class="section-toggle-btn">Мои заказы</button>
+                <button type="button" id="btn-fit-guide" class="section-toggle-btn">Памятка по подбору инвентаря</button>
+                <button type="button" id="btn-panel-prices" class="section-toggle-btn">Цены</button>
             </div>
+
             <div id="history-table" class="table-wrap empty collapsed"></div>
 
-            <h2 style="margin-top:1rem">Памятка по подбору инвентаря</h2>
-            <div class="actions" style="margin-bottom:0.5rem">
-                <button type="button" id="btn-fit-guide" class="secondary">Показать / скрыть памятку</button>
-            </div>
             <div id="fit-guide-wrap" class="table-wrap collapsed">
                 <table>
                     <thead>
@@ -184,54 +197,126 @@
                 <p class="hint">Это ориентировочная памятка. Финальный подбор делайте по фактическому уровню катания и посадке экипировки.</p>
             </div>
 
-            <h2 style="margin-top:1rem">Ски-пасс отдельно</h2>
-            <form id="skipass-form" class="grid">
-                <label>Дата<input name="rentalDate" type="date" required /></label>
-                <label>Длительность
-                    <select name="durationKey">
-                        <option value="1">1 час</option>
-                        <option value="2" selected>2 часа</option>
-                        <option value="4">4 часа</option>
-                        <option value="day">Весь день (9:00–21:00)</option>
-                    </select>
-                </label>
-                <div class="actions span-2">
-                    <button type="submit" class="secondary">Купить ски-пасс</button>
+            <div id="panel-prices" class="table-wrap collapsed price-stack">
+                <div class="price-mountain-card">
+                    <p class="price-mountain-heading">Прайс на прокат оборудования: будни</p>
+                    <table class="price-mountain-table">
+                        <thead>
+                            <tr><th>Время аренды</th><th>2 часа</th><th>3 часа</th><th>4 часа</th><th>День</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><th scope="row">Комплект (входят ботинки, крепления, сноуборд/горные лыжи)</th><td>700</td><td>750</td><td>850</td><td>1000</td></tr>
+                            <tr><th scope="row">Ботинки (сноуборд/горные лыжи)</th><td>500</td><td>550</td><td>700</td><td>800</td></tr>
+                            <tr><th scope="row">Сноуборд/горные лыжи</th><td>500</td><td>550</td><td>700</td><td>800</td></tr>
+                            <tr><th scope="row">Палки</th><td>250</td><td>300</td><td>350</td><td>400</td></tr>
+                            <tr><th scope="row">Шлем</th><td>150</td><td>200</td><td>300</td><td>400</td></tr>
+                            <tr><th scope="row">Маска</th><td>150</td><td>200</td><td>300</td><td>400</td></tr>
+                            <tr><th scope="row">Куртка/штаны</th><td>400</td><td>450</td><td>500</td><td>500</td></tr>
+                            <tr><th scope="row">Перчатки</th><td>250</td><td>300</td><td>350</td><td>350</td></tr>
+                        </tbody>
+                    </table>
                 </div>
-            </form>
-            <p id="skipass-msg" class="msg" role="status"></p>
-
-            <h2 style="margin-top:1rem">Цены</h2>
-            <div class="actions" style="margin-bottom:0.5rem">
-                <button type="button" id="btn-load-tariffs" class="secondary">Показать / скрыть цены</button>
+                <div class="price-mountain-card">
+                    <p class="price-mountain-heading">Прайс на прокат оборудования: выходные и праздничные дни</p>
+                    <table class="price-mountain-table">
+                        <thead>
+                            <tr><th>Время аренды</th><th>2 часа</th><th>3 часа</th><th>4 часа</th><th>День</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><th scope="row">Комплект снаряжения (входят ботинки, крепления, сноуборд/горные лыжи)</th><td>800</td><td>900</td><td>1100</td><td>1500</td></tr>
+                            <tr><th scope="row">Ботинки (сноуборд/горные лыжи)</th><td>600</td><td>650</td><td>800</td><td>1000</td></tr>
+                            <tr><th scope="row">Сноуборд/горные лыжи</th><td>600</td><td>650</td><td>800</td><td>1000</td></tr>
+                            <tr><th scope="row">Палки</th><td>250</td><td>300</td><td>350</td><td>400</td></tr>
+                            <tr><th scope="row">Шлем</th><td>200</td><td>250</td><td>300</td><td>400</td></tr>
+                            <tr><th scope="row">Маска</th><td>200</td><td>250</td><td>300</td><td>400</td></tr>
+                            <tr><th scope="row">Куртка/штаны</th><td>450</td><td>500</td><td>550</td><td>550</td></tr>
+                            <tr><th scope="row">Перчатки</th><td>250</td><td>300</td><td>350</td><td>350</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="price-mountain-card">
+                    <p class="price-mountain-heading">Прайс на скипас (подъемник): будни</p>
+                    <p class="price-subheading">Повременной (руб.)</p>
+                    <table class="price-mountain-table">
+                        <thead>
+                            <tr><th></th><th>2 часа</th><th>3 часа</th><th>4 часа</th><th>День</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><th scope="row">Повременной</th><td>1000 / 750*</td><td>1100 / 850*</td><td>1150</td><td>1350</td></tr>
+                        </tbody>
+                    </table>
+                    <p class="price-subheading">По кол-ву подъёмов (руб.)</p>
+                    <table class="price-mountain-table">
+                        <thead>
+                            <tr><th></th><th>15 шт</th><th>30 шт</th><th>50 шт</th><th>100 шт</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><th scope="row">Подъёмы</th><td>1100</td><td>1850</td><td>2650</td><td>6000</td></tr>
+                        </tbody>
+                    </table>
+                    <p class="price-subheading">Тюбинг</p>
+                    <table class="price-mountain-table">
+                        <thead>
+                            <tr><th></th><th>1 час</th><th>2 часа</th><th>3 часа</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><th scope="row">Тюбинг</th><td>500</td><td>1000</td><td>1500</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="price-mountain-card">
+                    <p class="price-mountain-heading">Прайс на скипас (подъемник): выходные и праздничные дни</p>
+                    <p class="price-subheading">Повременной (руб.)</p>
+                    <table class="price-mountain-table">
+                        <thead>
+                            <tr><th></th><th>2 часа</th><th>3 часа</th><th>4 часа</th><th>День</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><th scope="row">Повременной</th><td>1300</td><td>1500 / 1000*</td><td>1650</td><td>2000</td></tr>
+                        </tbody>
+                    </table>
+                    <p class="price-subheading">По кол-ву подъёмов (руб.)</p>
+                    <table class="price-mountain-table">
+                        <thead>
+                            <tr><th></th><th>15 шт</th><th>30 шт</th><th>50 шт</th><th>100 шт</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><th scope="row">Подъёмы</th><td>1550</td><td>2500</td><td>3650</td><td>6000</td></tr>
+                        </tbody>
+                    </table>
+                    <p class="price-subheading">Тюбинг</p>
+                    <table class="price-mountain-table">
+                        <thead>
+                            <tr><th></th><th>1 час</th><th>2 часа</th><th>3 часа</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><th scope="row">Тюбинг</th><td>650</td><td>1300</td><td>1950</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="price-footnote">* — цена по студенческому билету</p>
             </div>
-            <div id="tariffs-table" class="table-wrap collapsed"></div>
         </section>
 
         <!-- ===== ПАНЕЛЬ АДМИНИСТРАТОРА ===== -->
         <section class="card hidden" id="admin-panel">
-            <h2>Учётные записи</h2>
-            <div class="actions" style="margin-bottom:0.5rem">
-                <button type="button" id="btn-admin-users" class="secondary">Показать / скрыть пользователей</button>
-                <button type="button" id="btn-admin-undo" class="secondary" disabled>Отмена удаления</button>
+            <div class="section-toolbar">
+                <button type="button" id="btn-admin-users" class="section-toggle-btn">Учётные записи</button>
             </div>
-            <div id="admin-users-table" class="table-wrap empty collapsed"></div>
+            <div id="admin-users-wrap" class="table-wrap collapsed admin-users-wrap">
+                <div class="admin-users-undo-bar">
+                    <button type="button" id="btn-admin-undo" class="secondary" disabled>Отмена</button>
+                </div>
+                <div id="admin-users-table" class="admin-users-table-host empty"></div>
+            </div>
 
-            <h2 style="margin-top:1rem">Все аренды</h2>
-            <div class="actions" style="margin-bottom:0.5rem">
-                <button type="button" id="btn-admin-rentals" class="secondary">Показать / скрыть список</button>
+            <div class="section-toolbar">
+                <button type="button" id="btn-admin-rentals" class="section-toggle-btn">Все аренды</button>
             </div>
             <div id="admin-rentals-table" class="table-wrap empty collapsed"></div>
 
-            <h2 style="margin-top:1rem">Инвентарь: наличие и аренда</h2>
-            <div class="actions" style="margin-bottom:0.5rem">
-                <button type="button" id="btn-admin-inventory" class="secondary">Показать / скрыть статус</button>
-            </div>
-            <div id="admin-inventory-table" class="table-wrap empty collapsed"></div>
-
-            <h2 style="margin-top:1rem">Справочники инвентаря</h2>
-            <div class="actions" style="margin-bottom:0.5rem">
-                <button type="button" id="btn-admin-catalog" class="secondary">Показать / скрыть редактор</button>
+            <div class="section-toolbar">
+                <button type="button" id="btn-admin-catalog" class="section-toggle-btn">Справочники инвентаря</button>
             </div>
             <div id="admin-catalog-wrap" class="catalog-wrap collapsed">
                 <div class="catalog-tabs">
@@ -268,6 +353,71 @@
             <div class="actions">
                 <button type="button" id="admin-user-dialog-close">Закрыть</button>
             </div>
+        </div>
+    </dialog>
+
+    <dialog id="skipass-order-dialog" class="modal-dialog skipass-order-dialog">
+        <div class="modal-dialog-inner skipass-dialog-inner">
+            <div class="skipass-dialog-head">
+                <h3>Ски-пасс: новый заказ</h3>
+                <button type="button" id="skipass-dialog-close" class="dialog-icon-close" aria-label="Закрыть">×</button>
+            </div>
+            <p class="hint skipass-dialog-intro">Оформление по тарифам будней или выходных — отдельно от бронирования аренды (дата посещения в календаре не выбирается).</p>
+            <nav class="skipass-flow-progress" aria-label="Этапы заказа">
+                <span class="skip-flow-pill active" data-skip-flow-indicator="1">Тариф</span>
+                <span class="skip-flow-pill" data-skip-flow-indicator="2">Параметры</span>
+                <span class="skip-flow-pill" data-skip-flow-indicator="3">Готово</span>
+            </nav>
+            <form id="skipass-flow-form" action="#">
+                <div id="skipass-flow-step-1" class="skipass-flow-panel">
+                    <div class="grid">
+                        <label>Тип дня
+                            <select name="dayKind" required>
+                                <option value="weekday">Будни</option>
+                                <option value="weekend">Выходные и праздники</option>
+                            </select>
+                        </label>
+                        <div class="span-2 skipass-mode-group">
+                            <span class="field-label-span">Вариант тарифа</span>
+                            <label class="inline-check"><input type="radio" name="skipassMode" value="time" checked /> По времени</label>
+                            <label class="inline-check"><input type="radio" name="skipassMode" value="lifts" /> По числу подъёмов</label>
+                        </div>
+                    </div>
+                </div>
+                <div id="skipass-flow-step-2" class="skipass-flow-panel hidden">
+                    <div id="skipass-flow-time-panel" class="grid">
+                        <label>Длительность
+                            <select name="timeSlot">
+                                <option value="2">2 часа</option>
+                                <option value="3">3 часа</option>
+                                <option value="4">4 часа</option>
+                                <option value="day">День</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div id="skipass-flow-lifts-panel" class="grid hidden">
+                        <label>Пакет подъёмов
+                            <select name="liftCount">
+                                <option value="15">15 подъёмов</option>
+                                <option value="30">30 подъёмов</option>
+                                <option value="50">50 подъёмов</option>
+                                <option value="100">100 подъёмов</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+                <div id="skipass-flow-step-3" class="skipass-flow-panel hidden">
+                    <p class="hint skipass-summary-hint">Проверьте выбор и подтвердите заказ.</p>
+                    <div id="skipass-flow-summary" class="skipass-flow-summary"></div>
+                </div>
+                <p id="skipass-flow-msg" class="msg" role="status"></p>
+                <div class="skipass-dialog-actions actions">
+                    <button type="button" id="skipass-flow-cancel" class="secondary btn-lg">Отмена</button>
+                    <button type="button" id="skipass-flow-back" class="secondary btn-lg hidden">Назад</button>
+                    <button type="button" id="skipass-flow-next" class="btn-lg">Далее</button>
+                    <button type="submit" id="skipass-flow-submit" class="btn-lg hidden">Оформить заказ</button>
+                </div>
+            </form>
         </div>
     </dialog>
 
